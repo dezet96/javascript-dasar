@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Pembelajaran Pemrograman Dasar</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); min-height: 100vh; }
+    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    .glass-card { background: rgba(255,255,255,0.07); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); }
+    .btn-primary { background: linear-gradient(135deg, #0ea5e9, #06b6d4); transition: all 0.3s ease; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(14,165,233,0.4); }
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); transition: all 0.3s ease; }
+    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(16,185,129,0.4); }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); transition: all 0.3s ease; }
+    .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(239,68,68,0.4); }
+    .topic-card { transition: all 0.3s ease; }
+    .topic-card:hover:not(.locked) { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .locked { opacity: 0.5; cursor: not-allowed; }
+    .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; }
+    .fade-in { animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-in { animation: slideIn 0.4s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    .pulse-glow { animation: pulseGlow 2s infinite; }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px rgba(14,165,233,0.3); } 50% { box-shadow: 0 0 40px rgba(14,165,233,0.6); } }
+    .confetti { position: fixed; width: 10px; height: 10px; animation: confettiFall 3s linear forwards; z-index: 9999; }
+    @keyframes confettiFall { 0% { transform: translateY(-100px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    .progress-bar-fill { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .option-btn { transition: all 0.2s ease; }
+    .option-btn:hover:not(.disabled) { transform: scale(1.02); }
+    .toast { animation: toastSlide 0.4s ease; }
+    @keyframes toastSlide { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .shake { animation: shake 0.5s ease; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-8px); } 40%,80% { transform: translateX(8px); } }
+    .checkmark { animation: checkmarkPop 0.5s ease; }
+    @keyframes checkmarkPop { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .hljs { background: #1e1e2e !important; padding: 20px !important; border-radius: 12px; font-size: 14px; line-height: 1.7; }
+    .tab-btn { transition: all 0.3s ease; }
+    .tab-btn.active { background: rgba(14,165,233,0.2); color: #38bdf8; border-color: #38bdf8; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.5); border-radius: 4px; }
+    .star { animation: starTwinkle 1.5s ease-in-out infinite; }
+    @keyframes starTwinkle { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+  </style>
+</head>
+<body class="text-slate-200">
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<!-- App Container -->
+<div id="app"></div>
+
+<script>
+// =====================================================
+// DATA: BANK SOAL (Minimal 6 soal per topik)
+// =====================================================
+
+const bankSoal = {
+  1: [
+    { tipe: 'pg', pertanyaan: 'Apa hasil dari <code>10 % 3</code>?', opsi: ['3', '1', '0', '3.33'], jawaban: 1, penjelasan: 'Operator % adalah modulus (sisa bagi). 10 dibagi 3 = 3 sisa 1.' },
+    { tipe: 'output', pertanyaan: 'Perhatikan kode berikut:<br><pre class="mt-2"><code class="language-javascript">let x = 5;\nlet y = "5";\nconsole.log(x === y);</code></pre><br>Apa outputnya?', opsi: ['true', 'false', 'undefined', 'error'], jawaban: 1, penjelasan: '=== membandingkan nilai DAN tipe data. x adalah number, y adalah string, jadi false.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode agar hasilnya <code>true</code>:<br><pre class="mt-2"><code class="language-javascript">let umur = 17;\nlet boleh = umur ___ 17;</code></pre>', opsi: ['>', '<', '>=', '!=='], jawaban: 2, penjelasan: '>= artinya lebih besar atau sama dengan. 17 >= 17 menghasilkan true.' },
+    { tipe: 'pg', pertanyaan: 'Operator mana yang menghasilkan <code>true</code> jika KEDUA kondisi bernilai true?', opsi: ['||', '&&', '!', '=='], jawaban: 1, penjelasan: '&& (AND) hanya true jika kedua sisi true.' },
+    { tipe: 'output', pertanyaan: 'Perhatikan kode berikut:<br><pre class="mt-2"><code class="language-javascript">let a = 10;\na += 5;\na *= 2;\nconsole.log(a);</code></pre><br>Apa outputnya?', opsi: ['20', '25', '30', '35'], jawaban: 2, penjelasan: 'a = 10, lalu a += 5 jadi 15, lalu a *= 2 jadi 30.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kondisi untuk menetapkan lulus jika nilai minimal 75 (nilai 75 juga harus lulus):<br><pre class="mt-2"><code class="language-javascript">let nilai = 75;\nlet lulus = nilai ___ 75;</code></pre>', opsi: ['>=', '>', '!==', '<'], jawaban: 0, penjelasan: 'Operator >= berarti lebih besar atau sama dengan. Dengan nilai 75, kondisi ini bernilai true; operator > tidak menyertakan nilai yang sama dengan batas.' },
+    { tipe: 'pg', pertanyaan: 'Apa nilai yang dihasilkan oleh ekspresi <code>"5" + 3</code> di JavaScript? (Pilih nilai hasil penggabungannya.)', opsi: ['8', '53', 'NaN', 'Error'], jawaban: 1, penjelasan: 'Jika salah satu operand adalah string, + akan menggabungkan (concatenate) jadi "53".' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let a = true;\nlet b = false;\nconsole.log(a || b && !b);</code></pre><br>Apa outputnya?', opsi: ['true', 'false', 'undefined', '1'], jawaban: 0, penjelasan: 'Operator && dievaluasi dulu: b && !b = false && true = false. Lalu a || false = true || false = true.' }
+  ],
+  2: [
+    { tipe: 'pg', pertanyaan: 'Dalam percabangan if-else, blok kode mana yang dijalankan jika kondisi <code>false</code>?', opsi: ['Blok if', 'Blok else', 'Blok try', 'Blok catch'], jawaban: 1, penjelasan: 'Jika kondisi if false, maka blok else yang akan dieksekusi.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let nilai = 75;\nif (nilai >= 80) {\n  console.log("A");\n} else if (nilai >= 70) {\n  console.log("B");\n} else {\n  console.log("C");\n}</code></pre><br>Apa outputnya?', opsi: ['A', 'B', 'C', 'Error'], jawaban: 1, penjelasan: '75 >= 80 adalah false, tapi 75 >= 70 adalah true, jadi output "B".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk mengecek apakah siswa lulus (nilai >= 60):<br><pre class="mt-2"><code class="language-javascript">let nilai = 60;\nif (nilai ___ 60) {\n  console.log("Lulus");\n}</code></pre>', opsi: ['<', '>', '>=', '!=='], jawaban: 2, penjelasan: '>= 60 artinya nilai lebih besar atau sama dengan 60. Karena nilainya tepat 60, hanya >= yang membuat kondisi ini true.' },
+    { tipe: 'pg', pertanyaan: 'Berapa banyak kondisi yang bisa dicek dengan if-else if-else?', opsi: ['Hanya 1', 'Hanya 2', 'Sebanyak mungkin', 'Maksimal 3'], jawaban: 2, penjelasan: 'Kita bisa menambahkan else if sebanyak yang kita butuhkan untuk mengecek berbagai kondisi.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let umur = 16;\nif (umur < 13) {\n  console.log("Anak");\n} else if (umur < 20) {\n  console.log("Remaja");\n} else {\n  console.log("Dewasa");\n}</code></pre><br>Apa outputnya?', opsi: ['Anak', 'Remaja', 'Dewasa', 'undefined'], jawaban: 1, penjelasan: '16 < 13 adalah false, tapi 16 < 20 adalah true, jadi output "Remaja".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk mengecek bilangan genap/ganjil:<br><pre class="mt-2"><code class="language-javascript">let angka = 7;\nif (angka ___ 2 === 0) {\n  console.log("Genap");\n} else {\n  console.log("Ganjil");\n}</code></pre>', opsi: ['/', '*', '%', '+'], jawaban: 2, penjelasan: '% 2 menghitung sisa bagi dengan 2. Jika sisa 0, berarti genap.' },
+    { tipe: 'pg', pertanyaan: 'Apa bedanya <code>if</code> dengan <code>else if</code>?', opsi: ['if wajib ada, else if opsional', 'else if lebih cepat', 'if hanya untuk number', 'Tidak ada bedanya'], jawaban: 0, penjelasan: 'if adalah kondisi utama yang wajib ada. else if adalah kondisi tambahan yang opsional.' },
+    { tipe: 'output', pertanyaan: 'Perhatikan bahwa kondisi menggunakan operator penugasan <code>=</code>, bukan perbandingan <code>===</code>:<br><pre class="mt-2"><code class="language-javascript">let x = 5;\nif (x = 10) {\n  console.log("Sama");\n} else {\n  console.log("Bed");\n}</code></pre><br>Apa outputnya?', opsi: ['Sama', 'Bed', 'Error', 'undefined'], jawaban: 0, penjelasan: 'x = 10 adalah assignment, bukan perbandingan. Nilai 10 dianggap truthy, jadi blok if dijalankan. Hati-hati dengan = vs == vs ===!' }
+  ],
+  3: [
+    { tipe: 'pg', pertanyaan: 'Switch case cocok digunakan untuk...', opsi: ['Perulangan', 'Percabangan dengan banyak kondisi tetap', 'Fungsi matematika', 'Membuat array'], jawaban: 1, penjelasan: 'Switch cocok untuk memeriksa nilai yang sudah pasti (fixed values), misalnya menu pilihan.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let hari = 3;\nswitch(hari) {\n  case 1: console.log("Senin"); break;\n  case 2: console.log("Selasa"); break;\n  case 3: console.log("Rabu"); break;\n  default: console.log("Libur");\n}</code></pre><br>Apa outputnya?', opsi: ['Senin', 'Selasa', 'Rabu', 'Libur'], jawaban: 2, penjelasan: 'hari = 3, maka case 3 yang cocok, output "Rabu".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode switch untuk hari Sabtu:<br><pre class="mt-2"><code class="language-javascript">let hari = 6;\nswitch(hari) {\n  case 6: console.log("Sabtu"); ___;\n}</code></pre>', opsi: ['continue', 'break', 'return', 'exit'], jawaban: 1, penjelasan: 'break digunakan untuk menghentikan eksekusi switch setelah case cocok.' },
+    { tipe: 'pg', pertanyaan: 'Pada kode <code>switch</code> berikutnya, apa yang terjadi jika suatu <code>case</code> cocok tetapi tidak diakhiri dengan <code>break</code>?', opsi: ['Error', 'Program berhenti', 'Fall-through: case berikutnya juga dijalankan', 'Tidak ada efek'], jawaban: 2, penjelasan: 'Tanpa break, eksekusi akan "jatuh" ke case berikutnya (fall-through), meskipun nilainya tidak cocok.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let grade = "B";\nswitch(grade) {\n  case "A": console.log("Sangat Baik");\n  case "B": console.log("Baik");\n  case "C": console.log("Cukup");\n  default: console.log("Perlu Belajar");\n}</code></pre><br>Apa outputnya?', opsi: ['Hanya mencetak Baik', 'Mencetak Baik, Cukup, dan Perlu Belajar secara berurutan', 'Terjadi error', 'Tidak mencetak apa pun'], jawaban: 1, penjelasan: 'Tidak ada break! Setelah case B cocok, eksekusi jatuh ke case C dan default juga.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk mengecek menu makanan:<br><pre class="mt-2"><code class="language-javascript">let menu = 2;\nswitch(menu) {\n  case 1: console.log("Nasi Goreng"); break;\n  ___ 2: console.log("Mie Ayam"); break;\n  default: console.log("Tidak tersedia");\n}</code></pre>', opsi: ['if', 'case', 'when', 'else'], jawaban: 1, penjelasan: 'Dalam switch, setiap kondisi diawali dengan keyword case.' },
+    { tipe: 'pg', pertanyaan: 'Dalam JavaScript, bagaimana <code>switch</code> membandingkan nilai ekspresi dengan nilai pada setiap <code>case</code>?', opsi: ['Dengan membandingkan nilai dan tipe data secara ketat (seperti ===)', 'Dengan mengubah semua nilai menjadi string terlebih dahulu', 'Dengan membandingkan tipe data saja', 'Dengan selalu menganggap nilai yang mirip sebagai sama'], jawaban: 0, penjelasan: 'JavaScript mencocokkan nilai switch dengan case menggunakan perbandingan ketat (strict equality), sehingga nilai dan tipe datanya harus cocok.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let x = "5";\nswitch(x) {\n  case 5: console.log("Number"); break;\n  case "5": console.log("String"); break;\n  default: console.log("Lain");\n}</code></pre><br>Apa outputnya?', opsi: ['Number', 'String', 'Lain', 'Error'], jawaban: 1, penjelasan: 'Switch case di JS menggunakan strict comparison (===). "5" (string) tidak sama dengan 5 (number).' }
+  ],
+  4: [
+    { tipe: 'pg', pertanyaan: 'Pada struktur <code>for (inisialisasi; kondisi; update)</code>, bagian mana yang dijalankan setelah isi loop selesai pada setiap iterasi untuk memperbarui penghitung?', opsi: ['Inisialisasi', 'Kondisi', 'Increment/Update', 'Semua'], jawaban: 2, penjelasan: 'Increment/update (bagian ketiga) dieksekusi setiap kali iterasi selesai, sebelum kondisi dicek lagi.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">for (let i = 0; i < 3; i++) {\n  console.log(i);\n}</code></pre><br>Apa outputnya?', opsi: ['0 1 2', '1 2 3', '0 1 2 3', '1 2'], jawaban: 0, penjelasan: 'i dimulai dari 0, kondisi i < 3, jadi i = 0, 1, 2. Ketika i = 3, kondisi false, loop berhenti.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi perulangan untuk mencetak 1 sampai 5:<br><pre class="mt-2"><code class="language-javascript">for (let i = 1; i ___ 5; i++) {\n  console.log(i);\n}</code></pre>', opsi: ['>', '<', '<=', '>='], jawaban: 2, penjelasan: '<= 5 artinya loop berjalan selama i kurang dari atau sama dengan 5, jadi mencetak 1,2,3,4,5.' },
+    { tipe: 'pg', pertanyaan: 'Perbedaan <code>while</code> dan <code>do...while</code> adalah...', opsi: ['while lebih cepat', 'do...while selalu dijalankan minimal 1 kali', 'while hanya untuk number', 'Tidak ada bedanya'], jawaban: 1, penjelasan: 'do...while mengecek kondisi DI AKHIR, jadi blok kode minimal dijalankan 1 kali meskipun kondisi awal false.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let i = 0;\nwhile (i < 3) {\n  console.log(i);\n  i++;\n}</code></pre><br>Apa outputnya?', opsi: ['0 1 2', '1 2 3', '0 1 2 3', 'Error'], jawaban: 0, penjelasan: 'Sama seperti for, while juga mencetak 0, 1, 2 karena i < 3.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi perulangan while untuk mencetak bilangan genap 2-10:<br><pre class="mt-2"><code class="language-javascript">let i = 2;\nwhile (i <= 10) {\n  console.log(i);\n  i ___;\n}</code></pre>', opsi: ['++', '+= 2', '*= 2', '--'], jawaban: 1, penjelasan: '+= 2 menambah i sebesar 2 setiap iterasi, sehingga mencetak 2, 4, 6, 8, 10.' },
+    { tipe: 'pg', pertanyaan: 'Apa yang terjadi jika kondisi perulangan <code>while</code> selalu true?', opsi: ['Loop berhenti otomatis', 'Infinite loop / loop tak terbatas', 'Error', 'Program crash'], jawaban: 1, penjelasan: 'Jika kondisi while selalu true dan tidak ada cara untuk mengubahnya, akan terjadi infinite loop.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let hasil = 0;\nfor (let i = 1; i <= 4; i++) {\n  hasil += i;\n}\nconsole.log(hasil);</code></pre><br>Apa outputnya?', opsi: ['6', '10', '4', '24'], jawaban: 1, penjelasan: 'hasil = 0+1+2+3+4 = 10. Loop menjumlahkan 1 sampai 4.' }
+  ],
+  5: [
+    { tipe: 'pg', pertanyaan: 'Bagaimana cara membuat array kosong di JavaScript?', opsi: ['let arr = {};', 'let arr = [];', 'let arr = ();', 'let arr = "";'], jawaban: 1, penjelasan: 'Array di JS dibuat dengan tanda kurung siku []. Kurung kurawal {} untuk object.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let buah = ["Apel", "Jeruk", "Mangga"];\nconsole.log(buah[1]);</code></pre><br>Apa outputnya?', opsi: ['Apel', 'Jeruk', 'Mangga', 'undefined'], jawaban: 1, penjelasan: 'Index array dimulai dari 0. buah[0] = "Apel", buah[1] = "Jeruk".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk menambah elemen ke array:<br><pre class="mt-2"><code class="language-javascript">let angka = [1, 2, 3];\nangka.___(4);\nconsole.log(angka);</code></pre>', opsi: ['add', 'push', 'append', 'insert'], jawaban: 1, penjelasan: 'push() menambah elemen di akhir array. Hasil: [1, 2, 3, 4].' },
+    { tipe: 'pg', pertanyaan: 'Method apa yang menghapus elemen TERAKHIR dari array?', opsi: ['shift()', 'pop()', 'splice()', 'slice()'], jawaban: 1, penjelasan: 'pop() menghapus elemen terakhir. shift() menghapus elemen pertama.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let arr = [10, 20, 30];\nconsole.log(arr.length);</code></pre><br>Apa outputnya?', opsi: ['2', '3', '4', '10'], jawaban: 1, penjelasan: 'length mengembalikan jumlah elemen dalam array. [10, 20, 30] punya 3 elemen.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk mengubah elemen pertama:<br><pre class="mt-2"><code class="language-javascript">let warna = ["Merah", "Hijau", "Biru"];\nwarna[___] = "Kuning";\nconsole.log(warna);</code></pre>', opsi: ['1', '0', '-1', 'first'], jawaban: 1, penjelasan: 'Index 0 adalah elemen pertama array. warna[0] = "Kuning" mengganti "Merah".' },
+    { tipe: 'pg', pertanyaan: 'Apa hasil dari <code>[1, 2, 3].indexOf(2)</code>?', opsi: ['1', '2', '3', '-1'], jawaban: 0, penjelasan: 'indexOf(2) mencari posisi nilai 2 dalam array. Karena 2 ada di index 1, hasilnya 1.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let a = [1, 2];\nlet b = [3, 4];\nlet c = a.concat(b);\nconsole.log(c);</code></pre><br>Apa outputnya?', opsi: ['[1, 2, 3, 4]', '[[1,2],[3,4]]', '[1, 2]', '[3, 4]'], jawaban: 0, penjelasan: 'concat() menggabungkan dua array menjadi satu array baru: [1, 2, 3, 4].' }
+  ],
+  6: [
+    { tipe: 'pg', pertanyaan: 'Mengapa array sering dikombinasikan dengan perulangan?', opsi: ['Agar kode lebih pendek', 'Untuk memproses setiap elemen secara otomatis', 'Karena wajib', 'Agar lebih cepat'], jawaban: 1, penjelasan: 'Perulangan memungkinkan kita memproses setiap elemen array tanpa menulis kode berulang kali.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let nilai = [70, 80, 90];\nfor (let i = 0; i < nilai.length; i++) {\n  console.log(nilai[i]);\n}</code></pre><br>Apa outputnya?', opsi: ['70 80 90', '0 1 2', '3', 'undefined'], jawaban: 0, penjelasan: 'Loop berjalan dari i=0 sampai i<3, mencetak nilai[0], nilai[1], nilai[2] yaitu 70, 80, 90.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk menjumlahkan semua elemen array:<br><pre class="mt-2"><code class="language-javascript">let angka = [5, 10, 15];\nlet total = 0;\nfor (let i = 0; i < angka.length; i++) {\n  total ___ angka[i];\n}\nconsole.log(total);</code></pre>', opsi: ['=', '+', '+=', '*='], jawaban: 2, penjelasan: '+= menambahkan setiap elemen array ke variabel total. 0+5+10+15 = 30.' },
+    { tipe: 'pg', pertanyaan: 'Method array mana yang menjalankan sebuah callback untuk setiap elemen dan tidak otomatis membuat array hasil baru?', opsi: ['sort()', 'forEach()', 'reverse()', 'join()'], jawaban: 1, penjelasan: 'forEach() mengeksekusi fungsi untuk setiap elemen array, menggantikan perulangan for manual.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let nama = ["Andi", "Budi", "Citra"];\nnama.forEach(function(n) {\n  console.log("Halo " + n);\n});</code></pre><br>Apa outputnya?', opsi: ['Halo Andi Budi Citra', 'Halo Andi\nHalo Budi\nHalo Citra', 'Andi Budi Citra', 'Error'], jawaban: 1, penjelasan: 'forEach memanggil fungsi untuk setiap elemen, jadi mencetak "Halo Andi", "Halo Budi", "Halo Citra".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk mencari nilai tertinggi:<br><pre class="mt-2"><code class="language-javascript">let nilai = [60, 85, 70, 90];\nlet max = nilai[0];\nfor (let i = 1; i < nilai.length; i++) {\n  if (nilai[i] ___ max) {\n    max = nilai[i];\n  }\n}\nconsole.log(max);</code></pre>', opsi: ['<', '>', '==', '<='], jawaban: 1, penjelasan: '> max artinya jika elemen saat ini lebih besar dari max, update max. Hasil akhir: 90.' },
+    { tipe: 'pg', pertanyaan: 'Apa keuntungan menggunakan <code>for...of</code> dibanding <code>for</code> biasa untuk array?', opsi: ['Lebih cepat', 'Lebih mudah dibaca, langsung akses nilai', 'Mengurangi memori', 'Bisa mengubah index'], jawaban: 1, penjelasan: 'for...of langsung memberikan nilai elemen tanpa perlu index, lebih clean dan readable.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let angka = [2, 4, 6];\nlet hasil = [];\nfor (let n of angka) {\n  hasil.push(n * 2);\n}\nconsole.log(hasil);</code></pre><br>Apa outputnya?', opsi: ['[2, 4, 6]', '[4, 8, 12]', '[1, 2, 3]', 'Error'], jawaban: 1, penjelasan: 'for...of mengambil setiap nilai, lalu dikali 2 dan dipush ke hasil. [4, 8, 12].' }
+  ],
+  7: [
+    { tipe: 'pg', pertanyaan: 'Apa keuntungan menggunakan fungsi (function)?', opsi: ['Kode lebih panjang', 'Kode bisa digunakan berulang kali (reusable)', 'Program lebih lambat', 'Wajib untuk semua program'], jawaban: 1, penjelasan: 'Fungsi memungkinkan kode yang sama dipanggil berkali-kali tanpa menulis ulang.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">function sapa(nama) {\n  return "Halo, " + nama;\n}\nconsole.log(sapa("Andi"));</code></pre><br>Apa outputnya?', opsi: ['Halo, ', 'Halo, Andi', 'Andi', 'undefined'], jawaban: 1, penjelasan: 'Fungsi sapa menerima parameter "Andi" dan mengembalikan "Halo, Andi".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode fungsi untuk menghitung luas persegi:<br><pre class="mt-2"><code class="language-javascript">function luasPersegi(sisi) {\n  ___ sisi * sisi;\n}\nconsole.log(luasPersegi(5));</code></pre>', opsi: ['print', 'console.log', 'return', 'output'], jawaban: 2, penjelasan: 'return mengembalikan nilai dari fungsi. 5 * 5 = 25.' },
+    { tipe: 'pg', pertanyaan: 'Apa bedanya parameter dan argument?', opsi: ['Sama saja', 'Parameter = variabel di deklarasi fungsi, Argument = nilai saat dipanggil', 'Parameter hanya untuk number', 'Argument lebih besar dari parameter'], jawaban: 1, penjelasan: 'Parameter adalah placeholder saat fungsi didefinisikan. Argument adalah nilai aktual yang diberikan saat fungsi dipanggil.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">function tambah(a, b) {\n  return a + b;\n}\nfunction kali(a, b) {\n  return a * b;\n}\nconsole.log(kali(tambah(2, 3), 4));</code></pre><br>Apa outputnya?', opsi: ['9', '14', '20', '24'], jawaban: 2, penjelasan: 'tambah(2,3) = 5, lalu kali(5, 4) = 20. Fungsi bisa dipanggil di dalam fungsi lain!' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi arrow function:<br><pre class="mt-2"><code class="language-javascript">const kuadrat = (x) ___ x * x;\nconsole.log(kuadrat(4));</code></pre>', opsi: ['=>', '->', '==>', ':='], jawaban: 0, penjelasan: 'Arrow function menggunakan => (fat arrow). Hasil: 4 * 4 = 16.' },
+    { tipe: 'pg', pertanyaan: 'Apa yang terjadi jika fungsi dipanggil sebelum dideklarasikan dengan function declaration?', opsi: ['Error', 'Bisa dipanggil (hoisting)', 'undefined', 'NaN'], jawaban: 1, penjelasan: 'Function declaration di-hoist (diangkat) ke atas, jadi bisa dipanggil sebelum dideklarasikan.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">function cekNilai(n) {\n  if (n >= 80) return "A";\n  if (n >= 70) return "B";\n  return "C";\n}\nconsole.log(cekNilai(75));</code></pre><br>Apa outputnya?', opsi: ['A', 'B', 'C', 'Error'], jawaban: 1, penjelasan: '75 >= 80 false, tapi 75 >= 70 true, jadi return "B". Kode setelah return tidak dieksekusi.' }
+  ],
+  8: [
+    { tipe: 'pg', pertanyaan: 'Apa itu object dalam JavaScript?', opsi: ['Tipe data untuk angka', 'Kumpulan properti yang memiliki key dan value', 'Sejenis array', 'Fungsi bawaan browser'], jawaban: 1, penjelasan: 'Object adalah struktur data yang menyimpan data dalam pasangan key-value.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let siswa = { nama: "Budi", umur: 17 };\nconsole.log(siswa.nama);</code></pre><br>Apa outputnya?', opsi: ['Budi', '17', 'nama', 'undefined'], jawaban: 0, penjelasan: 'siswa.nama mengakses properti "nama" dari object siswa, hasilnya "Budi".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk mengakses properti dengan bracket notation:<br><pre class="mt-2"><code class="language-javascript">let siswa = { nama: "Ani", kelas: "XI RPL" };\nconsole.log(siswa[___"nama"___]);</code></pre>', opsi: ['( )', '{ }', '[ ]', '" "'], jawaban: 2, penjelasan: 'Bracket notation menggunakan tanda kurung siku ["nama"] untuk mengakses properti.' },
+    { tipe: 'pg', pertanyaan: 'Bagaimana cara menambah properti baru ke object?', opsi: ['Tidak bisa', 'obj.propertiBaru = nilai', 'obj.push(nilai)', 'obj.add(properti, nilai)'], jawaban: 1, penjelasan: 'Cukup assign nilai ke properti baru: obj.propertiBaru = nilai. Properti akan otomatis ditambahkan.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let mobil = { merk: "Toyota", tahun: 2020 };\nmobil.tahun = 2022;\nconsole.log(mobil.tahun);</code></pre><br>Apa outputnya?', opsi: ['2020', '2022', 'Toyota', 'undefined'], jawaban: 1, penjelasan: 'Properti tahun diubah dari 2020 menjadi 2022. Object di JS bersifat mutable (bisa diubah).' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk menghapus properti:<br><pre class="mt-2"><code class="language-javascript">let buku = { judul: "JS Dasar", harga: 50000 };\n___ buku.harga;\nconsole.log(buku.harga);</code></pre>', opsi: ['remove', 'delete', 'pop', 'clear'], jawaban: 1, penjelasan: 'delete menghapus properti dari object. Setelah dihapus, buku.harga menjadi undefined.' },
+    { tipe: 'pg', pertanyaan: 'Untuk object biasa, apa yang dikembalikan oleh <code>Object.keys(obj)</code>?', opsi: ['Semua value', 'Semua key/properti', 'Jumlah properti', 'Tipe data object'], jawaban: 1, penjelasan: 'Object.keys(obj) mengembalikan array berisi semua nama properti (key) dari object.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let orang = { nama: "Dedi", umur: 20 };\nlet keys = Object.keys(orang);\nconsole.log(keys);</code></pre><br>Apa outputnya?', opsi: ['["Dedi", 20]', '["nama", "umur"]', '2', '{nama, umur}'], jawaban: 1, penjelasan: 'Object.keys() mengembalikan array key: ["nama", "umur"].' }
+  ],
+  9: [
+    { tipe: 'pg', pertanyaan: 'Array of Objects adalah...', opsi: ['Array yang berisi function', 'Array yang setiap elemennya adalah object', 'Object yang berisi array', 'Tipe data khusus'], jawaban: 1, penjelasan: 'Array of Objects = array yang elemen-elemennya adalah object, biasanya untuk data tabel/record.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let siswa = [\n  { nama: "Andi", nilai: 80 },\n  { nama: "Budi", nilai: 90 }\n];\nconsole.log(siswa[0].nama);</code></pre><br>Apa outputnya?', opsi: ['Andi', 'Budi', '80', 'undefined'], jawaban: 0, penjelasan: 'siswa[0] adalah object pertama {nama: "Andi", nilai: 80}. siswa[0].nama = "Andi".' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk menampilkan nilai Budi:<br><pre class="mt-2"><code class="language-javascript">let siswa = [\n  { nama: "Andi", nilai: 80 },\n  { nama: "Budi", nilai: 90 }\n];\nconsole.log(siswa[___].nilai);</code></pre>', opsi: ['0', '1', '2', '"Budi"'], jawaban: 1, penjelasan: 'Budi ada di index 1. siswa[1].nilai = 90.' },
+    { tipe: 'pg', pertanyaan: 'Method array mana yang mengembalikan object pertama yang memenuhi kondisi pencarian, atau <code>undefined</code> jika tidak ditemukan?', opsi: ['push()', 'find()', 'pop()', 'shift()'], jawaban: 1, penjelasan: 'find() mengembalikan elemen pertama yang memenuhi kondisi yang diberikan.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let produk = [\n  { nama: "Laptop", harga: 5000000 },\n  { nama: "Mouse", harga: 150000 }\n];\nlet total = 0;\nfor (let p of produk) {\n  total += p.harga;\n}\nconsole.log(total);</code></pre><br>Apa outputnya?', opsi: ['5000000', '150000', '5150000', 'undefined'], jawaban: 2, penjelasan: 'Loop menjumlahkan harga semua produk: 5000000 + 150000 = 5150000.' },
+    { tipe: 'lengkapi', pertanyaan: 'Lengkapi kode untuk filter produk harga > 1000000:<br><pre class="mt-2"><code class="language-javascript">let produk = [\n  { nama: "Laptop", harga: 5000000 },\n  { nama: "Mouse", harga: 150000 }\n];\nlet mahal = produk.___(p => p.harga > 1000000);\nconsole.log(mahal.length);</code></pre>', opsi: ['find', 'filter', 'map', 'forEach'], jawaban: 1, penjelasan: 'filter() mengembalikan array baru dengan elemen yang memenuhi kondisi. Hanya Laptop yang harganya > 1000000.' },
+    { tipe: 'pg', pertanyaan: 'Apa keuntungan menggunakan array of objects dibanding array biasa?', opsi: ['Lebih cepat', 'Data lebih terstruktur dan mudah diakses', 'Menggunakan memori lebih sedikit', 'Lebih sederhana'], jawaban: 1, penjelasan: 'Array of objects memungkinkan setiap record memiliki banyak properti, lebih terstruktur untuk data kompleks.' },
+    { tipe: 'output', pertanyaan: '<pre class="mt-2"><code class="language-javascript">let data = [\n  { mapel: "JS", nilai: 85 },\n  { mapel: "HTML", nilai: 90 },\n  { mapel: "CSS", nilai: 80 }\n];\nlet rata = data.reduce((sum, d) => sum + d.nilai, 0) / data.length;\nconsole.log(rata);</code></pre><br>Apa outputnya?', opsi: ['80', '85', '255', '90'], jawaban: 1, penjelasan: 'reduce menjumlahkan semua nilai: 85+90+80 = 255. Dibagi 3 = 85.' }
+  ]
+};
+
+// =====================================================
+// DATA: RUBRIK PENILAIAN KODING
+// =====================================================
+
+const rubrikKoding = {
+  1: {
+    // Topik Operator
+    expected: ['Harga asli: Rp50000', 'Diskon 20%: Rp10000', 'Harga bayar: Rp40000'],
+    wajibKata: ['*', '-'],
+    minKata: 1,
+    laranganHardcode: true,
+    saran: 'Gunakan operator * untuk hitung diskon, dan - untuk kurangi harga.'
+  },
+  2: {
+    // Topik If-Else
+    expected: ['Lulus'],
+    wajibKata: ['if'],
+    minKata: 1,
+    laranganHardcode: true,
+    saran: 'Gunakan if untuk memeriksa apakah nilai >= 60.'
+  },
+  3: {
+    // Topik Switch
+    expected: ['Hari: Selasa'],
+    wajibKata: ['switch', 'case', 'break'],
+    minKata: 3,
+    laranganHardcode: true,
+    saran: 'Gunakan switch dengan case 1, case 2, case 3, dan break di setiap case.'
+  },
+  4: {
+    // Topik Perulangan
+    expected: ['1', '2', '3', '4', '5'],
+    wajibKata: ['for'],
+    minKata: 1,
+    laranganHardcode: true,
+    saran: 'Gunakan for loop: for (let i = 1; i <= 5; i++) { console.log(i); }'
+  },
+  5: {
+    // Topik Array Dasar
+    expected: ['Jeruk'],
+    wajibKata: ['[', ']', '[1]'],
+    minKata: 2,
+    laranganHardcode: true,
+    saran: 'Buat array lalu akses elemen index 1 dengan buah[1].'
+  },
+  6: {
+    // Topik Array + Perulangan
+    expected: ['60'],
+    wajibKata: ['for', 'total'],
+    minKata: 2,
+    laranganHardcode: true,
+    saran: 'Gunakan for loop untuk menjumlahkan: for (let i = 0; i < angka.length; i++) { total += angka[i]; }'
+  },
+  7: {
+    // Topik Fungsi
+    expected: ['8'],
+    wajibKata: ['function', 'return'],
+    minKata: 2,
+    laranganHardcode: true,
+    saran: 'Buat function tambah(a, b) { return a + b; } lalu panggil tambah(5, 3).'
+  },
+  8: {
+    // Topik Object
+    expected: ['Budi'],
+    wajibKata: ['{', '}', 'nama'],
+    minKata: 2,
+    laranganHardcode: true,
+    saran: 'Buat object { nama: "Budi", umur: 17 } lalu akses dengan siswa.nama.'
+  },
+  9: {
+    // Topik Array of Objects
+    expected: ['90'],
+    wajibKata: ['[', '{', 'nilai'],
+    minKata: 3,
+    laranganHardcode: true,
+    saran: 'Buat array of objects lalu akses siswa[1].nilai.'
+  }
+};
+
+// =====================================================
+// DATA: MATERI PER TOPIK
+// =====================================================
+
+const materiTopik = {
+  1: {
+    judul: 'Operator',
+    icon: '🔢',
+    pengantar: 'Operator itu kayak alat bantu di bengkel. Ada operator matematika (+, -, *, /, %) buat hitung-hitungan, operator perbandingan (==, ===, >, <) buat bandingin nilai, dan operator logika (&&, ||, !) buat gabungin kondisi. Bayangin kamu lagi ngitung harga jual barang di toko online — semua pakai operator!',
+    studiKasus: {
+      judul: '💰 Kasir Warung Kopi',
+      deskripsi: 'Belajar operator dengan membuat program kasir sederhana. Kita akan pelajari step by step!',
+      langkah: [
+        {
+          judul: 'Step 1: Siapkan Data',
+          penjelasan: 'Pertama, kita simpan harga barang dan jumlah yang dibeli ke dalam variabel.',
+          kode: `// Simpan data pembelian
+let hargaKopi = 15000;   // Harga 1 kopi
+let hargaRoti = 10000;   // Harga 1 roti
+let jumlahKopi = 2;      // Beli 2 kopi
+let jumlahRoti = 3;      // Beli 3 roti
+
+console.log("Kopi: " + jumlahKopi + " x Rp" + hargaKopi);
+console.log("Roti: " + jumlahRoti + " x Rp" + hargaRoti);`
+        },
+        {
+          judul: 'Step 2: Hitung Total Belanja',
+          penjelasan: 'Gunakan operator * (kali) dan + (tambah) untuk menghitung total harga semua barang.',
+          kode: `// Hitung total = (harga kopi x jumlah) + (harga roti x jumlah)
+let totalKopi = hargaKopi * jumlahKopi;   // 15000 * 2 = 30000
+let totalRoti = hargaRoti * jumlahRoti;   // 10000 * 3 = 30000
+let total = totalKopi + totalRoti;        // 30000 + 30000 = 60000
+
+console.log("Total belanja: Rp" + total);  // Output: Rp60000`
+        },
+        {
+          judul: 'Step 3: Cek Diskon',
+          penjelasan: 'Gunakan operator perbandingan > untuk cek apakah total > 50000. Jika ya, dapat diskon 10%.',
+          kode: `// Cek apakah dapat diskon
+let dapatDiskon = total > 50000;   // 60000 > 50000 = true
+console.log("Dapat diskon? " + dapatDiskon);  // Output: true
+
+// Hitung diskon 10%
+let diskon = total * 0.10;         // 60000 * 0.10 = 6000
+console.log("Diskon: Rp" + diskon); // Output: Rp6000`
+        },
+        {
+          judul: 'Step 4: Hitung yang Harus Dibayar',
+          penjelasan: 'Kurangi total dengan diskon menggunakan operator - (kurang).',
+          kode: `// Total yang harus dibayar
+let bayar = total - diskon;        // 60000 - 6000 = 54000
+console.log("Yang harus dibayar: Rp" + bayar);  // Output: Rp54000`
+        },
+        {
+          judul: 'Step 5: Hitung Kembalian',
+          penjelasan: 'Terakhir, hitung kembalian dari uang yang diberikan pelanggan.',
+          kode: `// Hitung kembalian
+let uangPelanggan = 100000;
+let kembalian = uangPelanggan - bayar;   // 100000 - 54000 = 46000
+
+console.log("Uang: Rp" + uangPelanggan);
+console.log("Kembalian: Rp" + kembalian);  // Output: Rp46000`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Kalkulator Diskon',
+      deskripsi: 'Tulis kode untuk menghitung harga setelah diskon 20%. Jika harga asli 50000, maka output harus:',
+      expectedOutput: ['Harga asli: Rp50000','Diskon 20%: Rp10000','Harga bayar: Rp40000'],
+      starterCode: `let harga = 50000;
+let diskonPersen = 20;
+
+// Tulis kode kamu di bawah ini
+`,
+      hint: 'Gunakan operator * untuk menghitung diskon, dan - untuk mengurangi harga asli.'
+    }
+  },
+  2: {
+    judul: 'Percabangan If - Else',
+    icon: '🔄',
+    pengantar: 'If-else itu kayak kamu lagi di persimpangan jalan. Kalau lampu hijau, jalan. Kalau merah, berhenti. Di programming, kita pakai if-else buat memutuskan kode mana yang dijalankan berdasarkan kondisi. Contoh: cek nilai ujian, tentukan lulus atau tidak, atau pilih jurusan berdasarkan minat.',
+    studiKasus: {
+      judul: '📊 Sistem Penilaian Sekolah',
+      deskripsi: 'Belajar if-else dengan membuat sistem penilaian. Kita mulai dari yang paling sederhana!',
+      langkah: [
+        {
+          judul: 'Step 1: Siapkan Data Nilai',
+          penjelasan: 'Simpan nilai dan kehadiran siswa ke dalam variabel.',
+          kode: `// Data siswa
+let nilai = 78;
+let kehadiran = 85;
+
+console.log("Nilai ujian: " + nilai);
+console.log("Kehadiran: " + kehadiran + "%");`
+        },
+        {
+          judul: 'Step 2: Tentukan Grade (If-Else)',
+          penjelasan: 'Gunakan if-else if untuk menentukan grade berdasarkan rentang nilai.',
+          kode: `// Tentukan grade
+let grade;
+
+if (nilai >= 90) {
+  grade = "A";           // Nilai 90 ke atas
+} else if (nilai >= 80) {
+  grade = "B";           // Nilai 80-89
+} else if (nilai >= 70) {
+  grade = "C";           // Nilai 70-79
+} else if (nilai >= 60) {
+  grade = "D";           // Nilai 60-69
+} else {
+  grade = "E";           // Nilai di bawah 60
+}
+
+console.log("Grade: " + grade);  // Output: C`
+        },
+        {
+          judul: 'Step 3: Cek Kelulusan (AND)',
+          penjelasan: 'Gunakan operator && (AND) untuk cek 2 kondisi sekaligus: nilai >= 70 DAN kehadiran >= 75.',
+          kode: `// Cek kelulusan
+// Siswa lulus jika nilai >= 70 DAN kehadiran >= 75
+let lulus;
+
+if (nilai >= 70 && kehadiran >= 75) {
+  lulus = true;
+  console.log("Status: LULUS ✅");
+} else {
+  lulus = false;
+  console.log("Status: TIDAK LULUS ❌");
+}
+
+// Output: LULUS ✅`
+        },
+        {
+          judul: 'Step 4: Tampilkan Hasil Akhir',
+          penjelasan: 'Gabungkan semua informasi untuk ditampilkan.',
+          kode: `// Tampilkan hasil lengkap
+console.log("=== HASIL PENILAIAN ===");
+console.log("Nilai: " + nilai);
+console.log("Grade: " + grade);
+console.log("Lulus: " + (lulus ? "Ya" : "Tidak"));
+
+// Output:
+// Nilai: 78
+// Grade: C
+// Lulus: Ya`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Cek Kelulusan',
+      deskripsi: 'Tulis kode untuk mengecek kelulusan. Jika nilai >= 60, output "Lulus". Jika tidak, output "Remedial".',
+      expectedOutput: ['Lulus'],
+      starterCode: `let nilai = 75;
+
+// Tulis kode kamu di bawah ini
+`,
+      hint: 'Gunakan if-else untuk memeriksa apakah nilai >= 60.'
+    }
+  },
+  3: {
+    judul: 'Percabangan Switch',
+    icon: '🔀',
+    pengantar: 'Switch itu kayak mesin vending machine. Kamu pencet tombol 1, keluar kopi. Pencet 2, keluar teh. Switch cocok buat kasus di mana ada banyak pilihan tetap yang sudah jelas. Lebih rapi daripada nulis if-else bertingkat kalau pilihannya banyak dan nilainya pasti.',
+    studiKasus: {
+      judul: '🍜 Menu Makanan Kantin',
+      deskripsi: 'Belajar switch case dengan memilih menu makanan. Lebih rapi dari if-else untuk pilihan tetap!',
+      langkah: [
+        {
+          judul: 'Step 1: Siapkan Pilihan',
+          penjelasan: 'Simpan nomor pilihan menu ke dalam variabel.',
+          kode: `// Pilihan menu (1-4)
+let pilihan = 3;
+
+console.log("Pilihan menu no: " + pilihan);`
+        },
+        {
+          judul: 'Step 2: Buat Struktur Switch',
+          penjelasan: 'Gunakan switch untuk memeriksa nilai pilihan. Setiap case menangani satu pilihan.',
+          kode: `// Deklarasi variabel untuk menyimpan hasil
+let menu, harga, bonus;
+
+// Switch memeriksa nilai pilihan
+switch(pilihan) {
+  case 1:
+    menu = "Nasi Goreng";
+    harga = 15000;
+    bonus = "Es Teh";
+    break;    // break = berhenti, jangan lanjut ke case bawah
+  
+  case 2:
+    menu = "Mie Ayam";
+    harga = 12000;
+    bonus = "Kerupuk";
+    break;
+  
+  case 3:
+    menu = "Soto Ayam";
+    harga = 13000;
+    bonus = "Telur Rebus";
+    break;
+  
+  case 4:
+    menu = "Bakso";
+    harga = 14000;
+    bonus = "Tahu";
+    break;`
+        },
+        {
+          judul: 'Step 3: Tambahkan Default',
+          penjelasan: 'Default adalah "jika tidak ada yang cocok". Mirip else di if-else. (Lanjutan dari Step 2)',
+          kode: `// ...lanjutan switch dari Step 2
+  default:
+    menu = "Tidak tersedia";
+    harga = 0;
+    bonus = "-";
+}
+
+// Karena pilihan = 3, maka case 3 yang dijalankan`
+        },
+        {
+          judul: 'Step 4: Tampilkan Hasil',
+          penjelasan: 'Cetak hasil pemilihan menu.',
+          kode: `// Tampilkan hasil
+console.log("Menu: " + menu);         // Output: Soto Ayam
+console.log("Harga: Rp" + harga);     // Output: Rp13000
+console.log("Bonus: " + bonus);       // Output: Telur Rebus`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Nama Hari',
+      deskripsi: 'Gunakan switch untuk menampilkan nama hari berdasarkan angka (1=Senin, 2=Selasa, 3=Rabu). Jika hari = 2, output harus:',
+      expectedOutput: ['Hari: Selasa'],
+      starterCode: `let hari = 2;
+
+// Tulis kode kamu di bawah ini
+`,
+      hint: 'Gunakan switch dengan case 1, case 2, case 3. Jangan lupa break di setiap case!'
+    }
+  },
+  4: {
+    judul: 'Perulangan For dan While',
+    icon: '🔁',
+    pengantar: 'Perulangan itu kayak kamu lagi ngerjain tugas yang sama berulang kali. For cocok kalau kamu tau persis mau berapa kali ngulang. While cocok kalau kamu gak tau pasti, tapi tau kapan harus berhenti. Contoh: cetak 100 kupon, atau terus input data sampai user ketik "selesai".',
+    studiKasus: {
+      judul: '🎫 Sistem Cetak Kupon Diskon',
+      deskripsi: 'Belajar for dan while dengan mencetak kupon. Kita mulai dari for yang paling dasar!',
+      langkah: [
+        {
+          judul: 'Step 1: Mengenal For Loop',
+          penjelasan: 'For loop punya 3 bagian: inisialisasi (let i=1), kondisi (i<=5), dan increment (i++).',
+          kode: `// For loop: cetak angka 1 sampai 3
+// i = 1       → mulai dari 1
+// i <= 3      → ulang selama i kurang dari sama dengan 3
+// i++         → tambah i sebesar 1 setiap putaran
+
+for (let i = 1; i <= 3; i++) {
+  console.log("Putaran ke-" + i);
+}
+
+// Output:
+// Putaran ke-1
+// Putaran ke-2
+// Putaran ke-3`
+        },
+        {
+          judul: 'Step 2: Cetak Kupon dengan For',
+          penjelasan: 'Gunakan for untuk membuat 5 kupon dengan kode unik.',
+          kode: `// Cetak 5 kupon diskon
+console.log("=== KUPON DISKON ===");
+
+for (let i = 1; i <= 5; i++) {
+  let kode = "DISC" + (1000 + i);
+  console.log("Kupon #" + i + " | Kode: " + kode);
+}
+
+// Output:
+// Kupon #1 | Kode: DISC1001
+// Kupon #2 | Kode: DISC1002
+// ...sampai Kupon #5`
+        },
+        {
+          judul: 'Step 3: Mengenal While Loop',
+          penjelasan: 'While loop hanya punya kondisi. Loop berjalan selama kondisi bernilai true.',
+          kode: `// While loop: cetak selama sisa > 0
+let sisa = 3;
+let nomor = 1;
+
+console.log("=== KUPON BONUS ===");
+
+while (sisa > 0) {
+  console.log("Bonus #" + nomor);
+  
+  sisa--;      // Kurangi sisa sebesar 1
+  nomor++;     // Tambah nomor sebesar 1
+}
+
+// Output:
+// Bonus #1
+// Bonus #2
+// Bonus #3`
+        },
+        {
+          judul: 'Step 4: Bedanya For dan While',
+          penjelasan: 'For = kamu tau pasti berapa kali. While = kamu tau kapan berhenti, tapi tidak tau berapa kali.',
+          kode: `// FOR: cocok kalau tau jumlah pasti
+for (let i = 1; i <= 3; i++) {
+  console.log("For ke-" + i);
+}
+
+// WHILE: cocok kalau kondisi berhentinya jelas
+let ulang = true;
+let hitung = 1;
+
+while (ulang) {
+  console.log("While ke-" + hitung);
+  hitung++;
+  
+  if (hitung > 3) {
+    ulang = false;   // Berhenti!
+  }
+}`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Cetak Angka',
+      deskripsi: 'Gunakan perulangan for untuk mencetak angka 1 sampai 5. Output yang diharapkan:',
+      expectedOutput: ['1','2','3','4','5'],
+      starterCode: `// Gunakan for loop di sini
+`,
+      hint: 'for (let i = 1; i <= 5; i++) { console.log(i); }'
+    }
+  },
+  5: {
+    judul: 'Array Dasar',
+    icon: '📦',
+    pengantar: 'Array itu kayak loker di sekolah. Setiap loker punya nomor (index) dan isinya bisa beda-beda. Array memungkinkan kita nyimpen banyak data dalam satu variabel. Contoh: daftar nama siswa, daftar harga barang, atau daftar nilai ujian. Lebih praktis daripada bikin variabel satu per satu!',
+    studiKasus: {
+      judul: '📋 Daftar Absensi Kelas',
+      deskripsi: 'Belajar array dasar dengan mengelola daftar nama siswa. Kita pelajari satu per satu!',
+      langkah: [
+        {
+          judul: 'Step 1: Membuat Array',
+          penjelasan: 'Array dibuat dengan tanda kurung siku []. Setiap item dipisahkan koma.',
+          kode: `// Buat array nama siswa
+let siswa = ["Andi", "Budi", "Citra", "Dedi"];
+
+console.log("Daftar siswa: " + siswa);
+console.log("Jumlah siswa: " + siswa.length);  // Output: 4`
+        },
+        {
+          judul: 'Step 2: Mengakses Elemen',
+          penjelasan: 'Array mulai dari index 0. siswa[0] = elemen pertama, siswa[1] = elemen kedua.',
+          kode: `// Akses elemen array
+console.log("Siswa pertama: " + siswa[0]);     // Output: Andi
+console.log("Siswa kedua: " + siswa[1]);       // Output: Budi
+
+// Elemen terakhir = length - 1
+let terakhir = siswa[siswa.length - 1];
+console.log("Siswa terakhir: " + terakhir);    // Output: Dedi`
+        },
+        {
+          judul: 'Step 3: Menambah Elemen',
+          penjelasan: 'Gunakan push() untuk menambah elemen di akhir array.',
+          kode: `// Tambah siswa baru
+siswa.push("Eka");
+console.log("Setelah tambah: " + siswa);
+// Output: ["Andi", "Budi", "Citra", "Dedi", "Eka"]
+
+console.log("Jumlah sekarang: " + siswa.length);  // Output: 5`
+        },
+        {
+          judul: 'Step 4: Mencari dan Menghapus',
+          penjelasan: 'indexOf() mencari posisi elemen. splice() menghapus elemen pada posisi tertentu.',
+          kode: `// Cari posisi "Budi"
+let posisi = siswa.indexOf("Budi");
+console.log("Budi ada di index: " + posisi);  // Output: 1
+
+// Hapus "Budi" dari array
+if (posisi !== -1) {
+  siswa.splice(posisi, 1);  // Hapus 1 elemen di index posisi
+}
+
+console.log("Setelah hapus: " + siswa);
+// Output: ["Andi", "Citra", "Dedi", "Eka"]`
+        },
+        {
+          judul: 'Step 5: Mengecek Elemen',
+          penjelasan: 'includes() mengecek apakah suatu nilai ada dalam array.',
+          kode: `// Cek apakah ada siswa bernama Citra
+let adaCitra = siswa.includes("Citra");
+console.log("Ada Citra? " + adaCitra);   // Output: true
+
+// Cek siswa yang tidak ada
+let adaZara = siswa.includes("Zara");
+console.log("Ada Zara? " + adaZara);     // Output: false`
+        }
+      ]
+    },
+
+    latihanKoding: {
+      judul: '🎯 Tantangan: Array Buah',
+      deskripsi: 'Buat array berisi 3 buah: "Apel", "Jeruk", "Mangga". Lalu cetak elemen kedua (index 1). Output yang diharapkan:',
+      expectedOutput: ['Jeruk'],
+      starterCode: `// Buat array dan cetak elemen ke-2
+`,
+      hint: 'let buah = ["Apel", "Jeruk", "Mangga"]; console.log(buah[1]);'
+    }
+  },
+  6: {
+    judul: 'Array + Perulangan',
+    icon: '🔗',
+    pengantar: 'Kombinasi array dan perulangan itu kayak mesin produksi. Array nyimpen bahan baku, perulangan memproses satu per satu. Dengan kombinasi ini, kita bisa otomatisasi tugas yang repetitif. Contoh: hitung rata-rata nilai 30 siswa, cari nilai tertinggi, atau filter data berdasarkan kondisi.',
+    studiKasus: {
+      judul: '📊 Hitung Rata-rata Nilai Kelas',
+      deskripsi: 'Belajar kombinasi array dan perulangan dengan menghitung statistik nilai kelas.',
+      langkah: [
+        {
+          judul: 'Step 1: Siapkan Data Nilai',
+          penjelasan: 'Buat array berisi nilai-nilai siswa.',
+          kode: `// Daftar nilai siswa
+let nilai = [75, 80, 65, 90, 85, 70, 95, 60];
+
+console.log("Jumlah siswa: " + nilai.length);  // Output: 8
+console.log("Nilai: " + nilai);`
+        },
+        {
+          judul: 'Step 2: Hitung Total dengan For',
+          penjelasan: 'Gunakan for loop untuk menjumlahkan semua elemen array.',
+          kode: `// Jumlahkan semua nilai
+let total = 0;
+
+for (let i = 0; i < nilai.length; i++) {
+  total += nilai[i];   // total = total + nilai[i]
+  console.log("Tambah " + nilai[i] + ", total sekarang: " + total);
+}
+
+console.log("Total nilai: " + total);  // Output: 620`
+        },
+        {
+          judul: 'Step 3: Hitung Rata-rata',
+          penjelasan: 'Bagi total dengan jumlah elemen untuk mendapatkan rata-rata.',
+          kode: `// Hitung rata-rata
+let rataRata = total / nilai.length;   // 620 / 8 = 77.5
+
+console.log("Rata-rata: " + rataRata.toFixed(1));  // Output: 77.5`
+        },
+        {
+          judul: 'Step 4: Cari Nilai Tertinggi & Terendah',
+          penjelasan: 'Gunakan for...of untuk memeriksa setiap nilai dan update tertinggi/terendah.',
+          kode: `// Cari nilai tertinggi dan terendah
+let tertinggi = nilai[0];   // Asumsikan yang pertama adalah tertinggi
+let terendah = nilai[0];    // Asumsikan yang pertama adalah terendah
+
+for (let n of nilai) {
+  if (n > tertinggi) {
+    tertinggi = n;   // Update jika n lebih besar
+  }
+  if (n < terendah) {
+    terendah = n;    // Update jika n lebih kecil
+  }
+}
+
+console.log("Tertinggi: " + tertinggi);   // Output: 95
+console.log("Terendah: " + terendah);     // Output: 60`
+        },
+        {
+          judul: 'Step 5: Hitung yang Lulus',
+          penjelasan: 'Gunakan forEach untuk menghitung berapa siswa yang nilainya >= 70.',
+          kode: `// Hitung jumlah siswa yang lulus (nilai >= 70)
+let lulus = 0;
+
+nilai.forEach(function(n) {
+  if (n >= 70) {
+    lulus++;   // Tambah 1 jika lulus
+  }
+});
+
+console.log("Jumlah lulus: " + lulus + " dari " + nilai.length);
+// Output: Jumlah lulus: 5 dari 8`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Jumlahkan Array',
+      deskripsi: 'Gunakan for loop untuk menjumlahkan semua elemen array [10, 20, 30] dan cetak hasilnya. Output yang diharapkan:',
+      expectedOutput: ['60'],
+      starterCode: `let angka = [10, 20, 30];
+let total = 0;
+
+// Tulis kode kamu di bawah ini
+`,
+      hint: 'Gunakan for loop: for (let i = 0; i < angka.length; i++) { total += angka[i]; }'
+    }
+  },
+  7: {
+    judul: 'Fungsi (Function)',
+    icon: '⚙️',
+    pengantar: 'Fungsi itu kayak resep masakan. Kamu tulis sekali, bisa dipakai berkali-kali. Fungsi menerima bahan (parameter), memprosesnya, dan menghasilkan sesuatu (return). Contoh: fungsi hitung luas, fungsi cek login, atau fungsi format mata uang. DRY principle: Don\'t Repeat Yourself!',
+    studiKasus: {
+      judul: '💳 Kalkulator Toko Online',
+      deskripsi: 'Program kalkulator dengan berbagai fungsi untuk toko online.',
+      langkah: [
+        {
+          judul: 'Step 1: Membuat Fungsi Sederhana',
+          penjelasan: 'Fungsi dibuat dengan keyword function, menerima parameter, dan mengembalikan nilai dengan return.',
+          kode: `// Fungsi hitung total belanja
+// Parameter: harga (per item), jumlah (berapa item)
+function hitungTotal(harga, jumlah) {
+  return harga * jumlah;
+}
+
+// Panggil fungsi
+let total = hitungTotal(25000, 4);
+console.log("Total: " + total);  // Output: 100000`
+        },
+        {
+          judul: 'Step 2: Fungsi dengan Perhitungan',
+          penjelasan: 'Buat fungsi untuk menghitung diskon berdasarkan persentase.',
+          kode: `// Fungsi hitung diskon
+function hitungDiskon(total, persen) {
+  return total * (persen / 100);
+}
+
+let diskon = hitungDiskon(100000, 10);
+console.log("Diskon: " + diskon);  // Output: 10000`
+        },
+        {
+          judul: 'Step 3: Fungsi Format Data',
+          penjelasan: 'Buat fungsi untuk memformat angka menjadi format rupiah.',
+          kode: `// Fungsi format rupiah
+function formatRupiah(angka) {
+  return "Rp" + angka.toLocaleString("id-ID");
+}
+
+console.log(formatRupiah(100000));   // Output: Rp100.000
+console.log(formatRupiah(50000));    // Output: Rp50.000`
+        },
+        {
+          judul: 'Step 4: Fungsi Cek Kondisi',
+          penjelasan: 'Buat fungsi yang mengembalikan true/false berdasarkan kondisi.',
+          kode: `// Fungsi cek ongkir gratis
+// Ongkir gratis jika total >= 100000
+function ongkirGratis(total) {
+  return total >= 100000;
+}
+
+console.log(ongkirGratis(120000));   // Output: true
+console.log(ongkirGratis(80000));    // Output: false`
+        },
+        {
+          judul: 'Step 5: Gabungkan Semua Fungsi',
+          penjelasan: 'Panggil beberapa fungsi secara berurutan untuk menyelesaikan kasus lengkap.',
+          kode: `// Kasus lengkap: belanja 4 item @ Rp25.000
+let totalBelanja = hitungTotal(25000, 4);     // 100000
+let potongan = hitungDiskon(totalBelanja, 10); // 10000
+let bayar = totalBelanja - potongan;           // 90000
+
+console.log("Total: " + formatRupiah(totalBelanja));
+console.log("Diskon: " + formatRupiah(potongan));
+console.log("Bayar: " + formatRupiah(bayar));
+console.log("Ongkir gratis? " + (ongkirGratis(bayar) ? "Ya" : "Tidak"));
+
+// Output:
+// Total: Rp100.000
+// Diskon: Rp10.000
+// Bayar: Rp90.000
+// Ongkir gratis? Tidak`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Fungsi Penjumlahan',
+      deskripsi: 'Buat fungsi tambah(a, b) yang mengembalikan hasil penjumlahan. Lalu panggil dengan tambah(5, 3) dan cetak hasilnya. Output yang diharapkan:',
+      expectedOutput: ['8'],
+      starterCode: `// Buat fungsi tambah di sini
+
+`,
+      hint: 'function tambah(a, b) { return a + b; } console.log(tambah(5, 3));'
+    }
+  },
+  8: {
+    judul: 'Object Dasar',
+    icon: '📁',
+    pengantar: 'Object itu kayak kartu identitas. Ada nama, umur, alamat, semua dalam satu tempat. Object menyimpan data dalam pasangan key-value, jadi lebih terstruktur daripada variabel terpisah. Contoh: data siswa, data produk, atau data pengguna aplikasi.',
+    studiKasus: {
+      judul: '👤 Profil Siswa SMK',
+      deskripsi: 'Program untuk membuat dan mengelola profil data siswa menggunakan object.',
+      langkah: [
+        {
+          judul: 'Step 1: Membuat Object',
+          penjelasan: 'Object dibuat dengan kurung kurawal {}. Setiap properti punya key dan value.',
+          kode: `// Buat object siswa
+let siswa = {
+  nama: "Rina Putri",
+  kelas: "XI RPL 2",
+  absen: 12,
+  jurusan: "Rekayasa Perangkat Lunak"
+};
+
+console.log(siswa);`
+        },
+        {
+          judul: 'Step 2: Mengakses Properti',
+          penjelasan: 'Ada 2 cara: dot notation (siswa.nama) dan bracket notation (siswa["nama"]).',
+          kode: `// Cara 1: Dot notation
+console.log("Nama: " + siswa.nama);       // Output: Rina Putri
+
+// Cara 2: Bracket notation
+console.log("Kelas: " + siswa["kelas"]);   // Output: XI RPL 2`
+        },
+        {
+          judul: 'Step 3: Menambah & Mengubah Properti',
+          penjelasan: 'Object di JS bersifat mutable. Bisa ditambah dan diubah propertinya.',
+          kode: `// Tambah properti baru
+siswa.email = "rina@smk.sch.id";
+siswa.aktif = true;
+
+// Ubah nilai properti yang sudah ada
+siswa.absen = 15;
+
+console.log("Email: " + siswa.email);     // Output: rina@smk.sch.id
+console.log("Absen: " + siswa.absen);     // Output: 15`
+        },
+        {
+          judul: 'Step 4: Object Bersarang (Nested)',
+          penjelasan: 'Properti object bisa berisi object lain. Ini berguna untuk data yang berkelompok.',
+          kode: `// Tambah object nilai di dalam object siswa
+siswa.nilai = { js: 85, html: 90, css: 88 };
+
+// Akses object bersarang
+console.log("Nilai JS: " + siswa.nilai.js);     // Output: 85
+console.log("Nilai HTML: " + siswa.nilai.html); // Output: 90`
+        },
+        {
+          judul: 'Step 5: Hitung Rata-rata',
+          penjelasan: 'Gunakan Object.values() untuk mengambil semua nilai, lalu hitung rata-rata.',
+          kode: `// Ambil semua nilai dari object nilai
+let daftarNilai = Object.values(siswa.nilai);
+console.log("Daftar nilai: " + daftarNilai);  // Output: 85,90,88
+
+// Hitung rata-rata
+let total = daftarNilai.reduce((a, b) => a + b, 0);
+let rata = total / daftarNilai.length;
+
+console.log("Rata-rata: " + rata.toFixed(1));  // Output: 87.7`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Object Siswa',
+      deskripsi: 'Buat object siswa dengan properti nama = "Budi" dan umur = 17. Lalu cetak nama siswa. Output yang diharapkan:',
+      expectedOutput: ['Budi'],
+      starterCode: `// Buat object siswa di sini
+
+`,
+      hint: 'let siswa = { nama: "Budi", umur: 17 }; console.log(siswa.nama);'
+    }
+  },
+  9: {
+    judul: 'Array of Objects',
+    icon: '🗂️',
+    pengantar: 'Ini adalah kombinasi semua konsep! Array of Objects = daftar data yang masing-masing punya banyak atribut. Kayak database mini di dalam JavaScript. Contoh: daftar 100 produk di toko online, daftar nilai semua siswa, atau data transaksi. Kamu bisa filter, sort, cari, dan proses data dengan mudah.',
+    studiKasus: {
+      judul: '🛒 Data Produk Toko Online',
+      deskripsi: 'Program lengkap untuk mengelola data produk dengan array of objects.',
+      langkah: [
+        {
+          judul: 'Step 1: Membuat Array of Objects',
+          penjelasan: 'Setiap elemen array adalah object yang punya banyak properti.',
+          kode: `// Array of objects: daftar produk toko
+let produk = [
+  { nama: "Laptop", harga: 5000000, stok: 10 },
+  { nama: "Mouse", harga: 150000, stok: 50 },
+  { nama: "Buku JS", harga: 85000, stok: 30 }
+];
+
+console.log("Jumlah produk: " + produk.length);  // Output: 3`
+        },
+        {
+          judul: 'Step 2: Menampilkan Data',
+          penjelasan: 'Gunakan forEach untuk menampilkan setiap produk.',
+          kode: `// Tampilkan semua produk
+console.log("=== DAFTAR PRODUK ===");
+
+produk.forEach(function(p) {
+  console.log(p.nama + " | Rp" + p.harga);
+});
+
+// Output:
+// Laptop | Rp5000000
+// Mouse | Rp150000
+// Buku JS | Rp85000`
+        },
+        {
+          judul: 'Step 3: Filter Data',
+          penjelasan: 'Gunakan filter() untuk memilih data yang memenuhi kondisi tertentu.',
+          kode: `// Filter: produk yang harganya di bawah 1 juta
+let murah = produk.filter(function(p) {
+  return p.harga < 1000000;
+});
+
+console.log("Produk murah:");
+murah.forEach(p => console.log("- " + p.nama));
+
+// Output:
+// Produk murah:
+// - Mouse
+// - Buku JS`
+        },
+        {
+          judul: 'Step 4: Cari Data Tertentu',
+          penjelasan: 'Gunakan find() untuk mencari elemen pertama yang cocok.',
+          kode: `// Cari produk dengan nama "Mouse"
+let mouse = produk.find(function(p) {
+  return p.nama === "Mouse";
+});
+
+console.log("Harga Mouse: Rp" + mouse.harga);   // Output: 150000
+console.log("Stok Mouse: " + mouse.stok);       // Output: 50`
+        },
+        {
+          judul: 'Step 5: Hitung Total dengan Reduce',
+          penjelasan: 'Gunakan reduce() untuk menjumlahkan/menggabungkan data dari semua elemen.',
+          kode: `// Hitung total nilai inventori
+// Rumus: harga x stok untuk setiap produk
+let totalNilai = produk.reduce(function(sum, p) {
+  return sum + (p.harga * p.stok);
+}, 0);  // 0 adalah nilai awal
+
+console.log("Total nilai inventori: Rp" + totalNilai.toLocaleString("id-ID"));
+// Output: Rp58.050.000
+
+// Penjelasan:
+// Laptop: 5000000 * 10 = 50000000
+// Mouse: 150000 * 50 = 7500000
+// Buku: 85000 * 30 = 2550000
+// Total: 50000000 + 7500000 + 2550000 = 60055000`
+        }
+      ]
+    },
+    latihanKoding: {
+      judul: '🎯 Tantangan: Array of Objects',
+      deskripsi: 'Buat array of objects berisi 2 siswa: {nama: "Andi", nilai: 80} dan {nama: "Budi", nilai: 90}. Lalu cetak nilai siswa kedua. Output yang diharapkan:',
+      expectedOutput: ['90'],
+      starterCode: `// Buat array of objects di sini
+
+`,
+      hint: 'let siswa = [{nama: "Andi", nilai: 80}, {nama: "Budi", nilai: 90}]; console.log(siswa[1].nilai);'
+    }
+  }
+};
+
+// =====================================================
+// STATE MANAGEMENT
+// =====================================================
+
+let appState = {
+  page: 'landing', // landing, dashboard, topic, result
+  user: null,
+  progress: {}, // { topicId: { completed: bool, correct: int, total: int, attempts: int, score: int } }
+  currentTopic: null,
+  currentQuestions: [],
+  currentAnswers: [],
+  currentQuestionIndex: 0,
+  currentAttempt: 1, // attempt count for current topic session
+  activeTab: 'pengantar',
+  draftCode: {}
+};
+
+const STORAGE_KEY = 'mediaPembelajaranPD';
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    appState.user = data.user || null;
+    appState.progress = data.progress && typeof data.progress === 'object' ? data.progress : {};
+    appState.currentTopic = Number.isInteger(data.currentTopic) ? data.currentTopic : null;
+    appState.currentQuestions = Array.isArray(data.currentQuestions) ? data.currentQuestions : [];
+    appState.currentAnswers = Array.isArray(data.currentAnswers) ? data.currentAnswers : [];
+    appState.currentQuestionIndex = Number.isInteger(data.currentQuestionIndex) ? data.currentQuestionIndex : 0;
+    appState.currentAttempt = Number.isInteger(data.currentAttempt) && data.currentAttempt > 0 ? data.currentAttempt : 1;
+    appState.activeTab = ['pengantar', 'studi', 'latihan'].includes(data.activeTab) ? data.activeTab : 'pengantar';
+    appState.draftCode = data.draftCode && typeof data.draftCode === 'object' ? data.draftCode : {};
+
+    // Resume the previous screen when a student reloads or reopens the hosted page.
+    if (appState.user && ['dashboard', 'topic', 'result'].includes(data.page)) {
+      appState.page = data.page;
+    }
+    // Recover safely if a saved topic session is incomplete or outdated.
+    if (appState.page === 'topic' && (!materiTopik[appState.currentTopic] || appState.currentQuestions.length !== 3 || appState.currentAnswers.length !== 3)) {
+      appState.page = 'dashboard';
+      appState.currentTopic = null;
+      appState.currentQuestions = [];
+      appState.currentAnswers = [];
+      appState.currentQuestionIndex = 0;
+      appState.activeTab = 'pengantar';
+    }
+    appState.currentQuestionIndex = Math.max(0, Math.min(2, appState.currentQuestionIndex));
+  } catch (error) {
+    console.warn('Progress belajar tidak dapat dibaca; memulai dengan sesi baru.', error);
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      user: appState.user,
+      progress: appState.progress,
+      page: appState.page,
+      currentTopic: appState.currentTopic,
+      currentQuestions: appState.currentQuestions,
+      currentAnswers: appState.currentAnswers,
+      currentQuestionIndex: appState.currentQuestionIndex,
+      currentAttempt: appState.currentAttempt,
+      activeTab: appState.activeTab,
+      draftCode: appState.draftCode
+    }));
+    return true;
+  } catch (error) {
+    console.warn('Progress belajar belum bisa disimpan di browser ini.', error);
+    return false;
+  }
+}
+
+function resetProgress() {
+  appState.progress = {};
+  saveState();
+}
+
+// =====================================================
+// UTILITY FUNCTIONS
+// =====================================================
+
+function shuffleArray(arr) {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function getRandomQuestions(topicId) {
+  const bank = bankSoal[topicId];
+  const shuffled = shuffleArray(bank);
+  return shuffled.slice(0, 3).map(q => {
+    // Shuffle options and track correct answer
+    const originalOpsi = [...q.opsi];
+    const correctText = originalOpsi[q.jawaban];
+    const shuffledOpsi = shuffleArray(originalOpsi);
+    const newJawaban = shuffledOpsi.indexOf(correctText);
+    return { ...q, opsi: shuffledOpsi, jawaban: newJawaban };
+  });
+}
+
+function getUnlockedTopics() {
+  let unlocked = [1];
+  for (let i = 1; i < 9; i++) {
+    if (appState.progress[i] && appState.progress[i].completed) {
+      unlocked.push(i + 1);
+    }
+  }
+  return unlocked;
+}
+
+function isTopicUnlocked(topicId) {
+  return getUnlockedTopics().includes(topicId);
+}
+
+function getCompletedCount() {
+  let count = 0;
+  for (let i = 1; i <= 9; i++) {
+    if (appState.progress[i] && appState.progress[i].completed) count++;
+  }
+  return count;
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  const colors = {
+    info: 'bg-sky-500',
+    success: 'bg-emerald-500',
+    error: 'bg-rose-500',
+    warning: 'bg-amber-500'
+  };
+  const icons = {
+    info: 'ℹ️',
+    success: '✅',
+    error: '❌',
+    warning: '⚠️'
+  };
+  toast.className = `toast ${colors[type]} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[280px]`;
+  toast.innerHTML = `<span class="text-xl">${icons[type]}</span><span class="font-medium">${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function formatDateID() {
+  const now = new Date();
+  const options = { day: 'numeric', month: 'long', year: 'numeric' };
+  return now.toLocaleDateString('id-ID', options);
+}
+
+function getPredikat(persen) {
+  if (persen >= 90) return { huruf: 'A', lulus: true };
+  if (persen >= 80) return { huruf: 'B', lulus: true };
+  if (persen >= 70) return { huruf: 'C', lulus: true };
+  return { huruf: 'D', lulus: false };
+}
+
+// =====================================================
+// FUNGSI PENILAIAN KODING
+// =====================================================
+
+/**
+ * Menilai kode siswa berdasarkan rubrik per topik.
+ * Komponen penilaian:
+ *  - Output (50%): apakah output sesuai expected
+ *  - Konsep (30%): apakah keyword konsep yang diajarkan dipakai
+ *  - Anti-hardcode (20%): apakah siswa tidak sekadar console.log literal
+ */
+function nilaiKoding(topicId, code, logs) {
+  const rubrik = rubrikKoding[topicId];
+  if (!rubrik) {
+    return { total: 0, output: 0, konsep: 0, kualitas: 0, catatan: ['Rubrik tidak ditemukan.'], lulus: false };
+  }
+
+  const skor = { output: 0, konsep: 0, kualitas: 0, total: 0, catatan: [], lulus: false };
+
+  // --- 1. Cek output (50 poin) ---
+  const actual = logs.filter(l => !l.startsWith('[ERROR]') && !l.startsWith('[WARN]'));
+  const outputCocok = rubrik.expected.length === actual.length &&
+                      rubrik.expected.every((exp, i) => actual[i] === exp);
+  if (outputCocok) {
+    skor.output = 50;
+    skor.catatan.push({ status: 'ok', pesan: 'Output sesuai dengan yang diharapkan.' });
+  } else {
+    skor.catatan.push({ status: 'fail', pesan: 'Output belum sesuai.' });
+  }
+
+  // --- 2. Cek konsep (30 poin) ---
+  const konsepDipakai = rubrik.wajibKata.every(k => code.includes(k));
+  if (konsepDipakai) {
+    skor.konsep = 30;
+    skor.catatan.push({ status: 'ok', pesan: 'Konsep yang diajarkan sudah dipakai: ' + rubrik.wajibKata.join(', ') });
+  } else {
+    const hilang = rubrik.wajibKata.filter(k => !code.includes(k));
+    skor.catatan.push({ status: 'warn', pesan: 'Konsep belum dipakai: ' + hilang.join(', ') + '. ' + rubrik.saran });
+  }
+
+  // --- 3. Anti-hardcode (20 poin) ---
+  let hardcode = false;
+  if (rubrik.laranganHardcode) {
+    // Deteksi jika siswa hanya menulis console.log("...") dengan string literal yang sama dengan expected
+    for (const exp of rubrik.expected) {
+      const literalPattern = new RegExp('console\\.log\\s*\\(\\s*[\'"`]' + escapeRegExp(exp) + '[\'"`]\\s*\\)');
+      if (literalPattern.test(code)) {
+        hardcode = true;
+        break;
+      }
+    }
+  }
+  if (!hardcode) {
+    skor.kualitas = 20;
+    skor.catatan.push({ status: 'ok', pesan: 'Tidak terdeteksi hardcode output.' });
+  } else {
+    skor.catatan.push({ status: 'fail', pesan: 'Terdeteksi hardcode: kamu hanya menulis console.log dengan string literal, bukan menghitung nilai.' });
+  }
+
+  skor.total = skor.output + skor.konsep + skor.kualitas;
+  skor.lulus = skor.total >= 70; // minimal 70 untuk lulus tantangan koding
+  return skor;
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// =====================================================
+// RENDER FUNCTIONS
+// =====================================================
+
+function renderApp() {
+  const app = document.getElementById('app');
+  if (appState.page === 'landing') {
+    app.innerHTML = renderLanding();
+    attachLandingEvents();
+  } else if (appState.page === 'dashboard') {
+    app.innerHTML = renderDashboard();
+    attachDashboardEvents();
+  } else if (appState.page === 'topic') {
+    app.innerHTML = renderTopic();
+    attachTopicEvents();
+    hljs.highlightAll();
+  } else if (appState.page === 'result') {
+    app.innerHTML = renderResult();
+    attachResultEvents();
+  }
+}
+
+function renderLanding() {
+  const hasData = appState.user !== null;
+  return `
+    <div class="min-h-screen flex items-center justify-center p-4">
+      <div class="glass-card rounded-3xl p-8 md:p-12 max-w-lg w-full fade-in">
+        <div class="text-center mb-8">
+          <div class="text-6xl mb-4">💻</div>
+          <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">Media Pembelajaran<br>Pemrograman Dasar</h1>
+          <p class="text-slate-400 text-lg">Siap Belajar Logika Sebelum Masuk PHP?</p>
+        </div>
+        
+        ${hasData ? `
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 mb-6">
+          <p class="text-emerald-400 font-semibold mb-2">👋 Halo, ${appState.user.nama}!</p>
+          <p class="text-slate-400 text-sm mb-4">Kamu sudah pernah mengerjakan sebelumnya. Progress: ${getCompletedCount()}/9 topik</p>
+          <div class="flex gap-3">
+            <button id="btnContinue" class="btn-success flex-1 py-3 px-5 rounded-xl font-semibold text-white text-sm">
+              ▶️ Lanjutkan Progress
+            </button>
+            <button id="btnRestart" class="btn-danger flex-1 py-3 px-5 rounded-xl font-semibold text-white text-sm">
+              🔄 Mulai Ulang
+            </button>
+          </div>
+        </div>
+        ` : `
+        <form id="formIdentitas" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Nama Lengkap</label>
+            <input type="text" id="inputNama" placeholder="Masukkan nama kamu..." 
+              class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+              required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Kelas</label>
+            <select id="inputKelas" class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all">
+              <option value="XI RPL 2">XI RPL 2</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-2">Nomor Absen</label>
+            <input type="number" id="inputAbsen" placeholder="Contoh: 12" min="1" max="40"
+              class="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+              required>
+          </div>
+          <button type="submit" id="btnMulai" disabled
+            class="w-full py-4 rounded-xl font-bold text-white text-lg bg-slate-600 cursor-not-allowed transition-all">
+            🚀 Mulai Belajar
+          </button>
+        </form>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function attachLandingEvents() {
+  const hasData = appState.user !== null;
+  if (hasData) {
+    document.getElementById('btnContinue').onclick = () => {
+      appState.page = 'dashboard';
+      saveState();
+      renderApp();
+    };
+    document.getElementById('btnRestart').onclick = () => {
+      if (confirm('Yakin mau mulai ulang? Progress lama akan hilang!')) {
+        resetProgress();
+        appState.user = null;
+        saveState();
+        renderApp();
+      }
+    };
+  } else {
+    const namaInput = document.getElementById('inputNama');
+    const btnMulai = document.getElementById('btnMulai');
+    namaInput.addEventListener('input', () => {
+      if (namaInput.value.trim()) {
+        btnMulai.disabled = false;
+        btnMulai.className = 'w-full py-4 rounded-xl font-bold text-white text-lg btn-primary';
+      } else {
+        btnMulai.disabled = true;
+        btnMulai.className = 'w-full py-4 rounded-xl font-bold text-white text-lg bg-slate-600 cursor-not-allowed transition-all';
+      }
+    });
+    document.getElementById('formIdentitas').addEventListener('submit', (e) => {
+      e.preventDefault();
+      appState.user = {
+        nama: document.getElementById('inputNama').value.trim(),
+        kelas: document.getElementById('inputKelas').value,
+        absen: document.getElementById('inputAbsen').value
+      };
+      appState.page = 'dashboard';
+      saveState();
+      renderApp();
+      showToast('Selamat datang, ' + appState.user.nama + '! 🎉', 'success');
+    });
+  }
+}
+
+function renderDashboard() {
+  const completed = getCompletedCount();
+  const percent = Math.round((completed / 9) * 100);
+  const unlocked = getUnlockedTopics();
+  
+  let topicsHtml = '';
+  for (let i = 1; i <= 9; i++) {
+    const mat = materiTopik[i];
+    const isUnlocked = unlocked.includes(i);
+    const isCompleted = appState.progress[i] && appState.progress[i].completed;
+    const statusClass = isCompleted ? 'border-emerald-500/50 bg-emerald-500/5' : isUnlocked ? 'border-sky-500/30 hover:border-sky-400/50' : 'locked border-slate-700/50 bg-slate-800/30';
+    const statusIcon = isCompleted ? '✅' : isUnlocked ? '🔓' : '🔒';
+    
+    topicsHtml += `
+      <div class="topic-card glass-card rounded-2xl p-5 border ${statusClass} cursor-pointer relative overflow-hidden" 
+        data-topic="${i}" ${!isUnlocked ? 'onclick="showLockedToast(' + (i-1) + ')"' : ''}>
+        <div class="flex items-center gap-4">
+          <div class="text-4xl">${mat.icon}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-white">Topik ${i}</span>
+              <span class="text-lg">${statusIcon}</span>
+            </div>
+            <p class="text-slate-400 text-sm truncate">${mat.judul}</p>
+          </div>
+          ${isCompleted ? '<span class="text-emerald-400 text-xs font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg">SELESAI</span>' : ''}
+        </div>
+        ${!isUnlocked ? '<div class="absolute inset-0 bg-slate-900/40"></div>' : ''}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="min-h-screen p-4 md:p-8">
+      <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-white">📚 Daftar Topik</h2>
+            <p class="text-slate-400 text-sm">Halo, ${appState.user.nama} — ${appState.user.kelas}</p>
+          </div>
+          <button id="btnLogout" class="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-slate-800 transition-all">
+            🚪 Keluar
+          </button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="glass-card rounded-2xl p-5 mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-slate-300">📊 Progress Belajar</span>
+            <span class="text-sm font-bold text-sky-400">${completed}/9 topik selesai (${percent}%)</span>
+          </div>
+          <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+            <div class="progress-bar-fill h-full bg-gradient-to-r from-sky-500 to-emerald-500 rounded-full" style="width: ${percent}%"></div>
+          </div>
+        </div>
+        
+        <!-- Menu Unduh Laporan -->
+        <div class="glass-card rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p class="text-white font-bold">📄 Laporan Hasil Belajar</p>
+            <p class="text-slate-400 text-sm">Unduh rekap nilai setelah semua topik selesai.</p>
+          </div>
+          <button id="btnDownloadPDFFromDashboard" class="btn-primary py-3 px-5 rounded-xl font-bold text-white whitespace-nowrap">
+            ⬇️ Unduh PDF
+          </button>
+        </div>
+
+        <!-- Topics Grid -->
+        <div class="grid gap-3">
+          ${topicsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachDashboardEvents() {
+  const downloadDashboardButton = document.getElementById('btnDownloadPDFFromDashboard');
+  if (downloadDashboardButton) {
+    downloadDashboardButton.onclick = () => {
+      if (getCompletedCount() < 9) {
+        showToast('Selesaikan semua 9 topik terlebih dahulu untuk mengunduh laporan PDF.', 'warning');
+        return;
+      }
+      appState.page = 'result';
+      saveState();
+      renderApp();
+      setTimeout(() => {
+        const resultDownloadButton = document.getElementById('btnDownloadPDF');
+        if (resultDownloadButton) resultDownloadButton.click();
+      }, 100);
+    };
+  }
+
+  document.getElementById('btnLogout').onclick = () => {
+    if (confirm('Yakin mau keluar?')) {
+      appState.user = null;
+      appState.progress = {};
+      appState.page = 'landing';
+      appState.currentTopic = null;
+      appState.currentQuestions = [];
+      appState.currentAnswers = [];
+      appState.currentQuestionIndex = 0;
+      appState.activeTab = 'pengantar';
+      appState.draftCode = {};
+      saveState();
+      renderApp();
+    }
+  };
+  
+  const unlocked = getUnlockedTopics();
+  document.querySelectorAll('.topic-card').forEach(card => {
+    const topicId = parseInt(card.dataset.topic);
+    if (unlocked.includes(topicId)) {
+      card.onclick = () => openTopic(topicId);
+    }
+  });
+}
+
+function showLockedToast(prevTopic) {
+  showToast(`🔒 Selesaikan Topik ${prevTopic} dulu ya!`, 'warning');
+  const cards = document.querySelectorAll('.topic-card');
+  if (cards[prevTopic]) {
+    cards[prevTopic].classList.add('shake');
+    setTimeout(() => cards[prevTopic].classList.remove('shake'), 500);
+  }
+}
+
+function openTopic(topicId) {
+  const canResume = appState.currentTopic === topicId &&
+    Array.isArray(appState.currentQuestions) && appState.currentQuestions.length === 3 &&
+    Array.isArray(appState.currentAnswers) && appState.currentAnswers.length === 3;
+
+  if (!canResume) {
+    appState.currentTopic = topicId;
+    appState.currentQuestions = getRandomQuestions(topicId);
+    appState.currentAnswers = new Array(3).fill(null);
+    appState.currentQuestionIndex = 0;
+    appState.activeTab = 'pengantar';
+    const prev = appState.progress[topicId];
+    appState.currentAttempt = prev && prev.attempts ? prev.attempts + 1 : 1;
+  }
+  appState.page = 'topic';
+  saveState();
+  renderApp();
+}
+
+function getAttemptBasePoints(attempt) {
+  return Math.max(10, 100 - (Math.max(1, attempt) - 1) * 25);
+}
+
+function recordAttemptIfComplete() {
+  if (!appState.currentAnswers || appState.currentAnswers.length !== 3 || appState.currentAnswers.some(a => a === null)) return;
+  const topicId = appState.currentTopic;
+  const previous = appState.progress[topicId] || { completed: false, attempts: 0, attemptHistory: [] };
+  const history = Array.isArray(previous.attemptHistory) ? previous.attemptHistory : [];
+  if (history.some(item => item.attempt === appState.currentAttempt)) return;
+
+  const correctCount = appState.currentAnswers.filter(a => a.correct).length;
+  const wrongCount = 3 - correctCount;
+  const score = Math.max(0, getAttemptBasePoints(appState.currentAttempt) - wrongCount * 20);
+  const answerDetails = appState.currentAnswers.map((a, i) => {
+    const q = appState.currentQuestions[i];
+    return {
+      question: q.pertanyaan.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+      selected: q.opsi[a.selected],
+      correctAnswer: q.opsi[q.jawaban],
+      correct: !!a.correct
+    };
+  });
+  history.push({ attempt: appState.currentAttempt, correct: correctCount, wrong: wrongCount, score, answers: answerDetails, date: new Date().toISOString() });
+  appState.progress[topicId] = {
+    ...previous,
+    completed: !!previous.completed,
+    correct: correctCount,
+    wrong: wrongCount,
+    total: 3,
+    attempts: appState.currentAttempt,
+    score,
+    attemptHistory: history
+  };
+  saveState();
+}
+
+function renderTopic() {
+  const topic = materiTopik[appState.currentTopic];
+  const isCompleted = appState.progress[appState.currentTopic] && appState.progress[appState.currentTopic].completed;
+  
+  return `
+    <div class="min-h-screen p-4 md:p-8">
+      <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-6">
+          <button id="btnBack" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-all">
+            ← Kembali
+          </button>
+          <div>
+            <h2 class="text-xl font-bold text-white">${topic.icon} Topik ${appState.currentTopic}: ${topic.judul}</h2>
+            <p class="text-slate-400 text-sm">${isCompleted ? '✅ Sudah selesai — bisa review ulang' : 'Kerjakan semua soal untuk membuka topik berikutnya'}</p>
+          </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <button class="tab-btn ${appState.activeTab === 'pengantar' ? 'active' : 'text-slate-400'} px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent whitespace-nowrap" data-tab="pengantar">
+            📖 Pengantar
+          </button>
+          <button class="tab-btn ${appState.activeTab === 'studi' ? 'active' : 'text-slate-400'} px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent whitespace-nowrap" data-tab="studi">
+            💡 Studi Kasus
+          </button>
+          <button class="tab-btn ${appState.activeTab === 'latihan' ? 'active' : 'text-slate-400'} px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent whitespace-nowrap" data-tab="latihan">
+            ✏️ Latihan Soal
+          </button>
+        </div>
+        
+        <!-- Tab Content -->
+        <div id="tabContent" class="fade-in">
+          ${renderTabContent(appState.activeTab)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTabContent(tab) {
+  const topic = materiTopik[appState.currentTopic];
+  
+  if (tab === 'pengantar') {
+    return `
+      <div class="glass-card rounded-2xl p-6 md:p-8">
+        <div class="text-5xl mb-4">${topic.icon}</div>
+        <h3 class="text-2xl font-bold text-white mb-4">Apa itu ${topic.judul}?</h3>
+        <p class="text-slate-300 leading-relaxed text-lg">${topic.pengantar}</p>
+        <div class="mt-6 p-4 bg-sky-500/10 border border-sky-500/20 rounded-xl">
+          <p class="text-sky-400 text-sm font-medium">💡 Tips: Baca dengan santai, gak usah buru-buru. Pahami konsepnya dulu baru lanjut ke studi kasus!</p>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (tab === 'studi') {
+    const latihan = topic.latihanKoding;
+    const langkahHtml = topic.studiKasus.langkah.map((l, i) => `
+      <div class="mb-6 last:mb-0">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 text-sm font-bold">${i + 1}</span>
+          <h4 class="text-white font-semibold">${l.judul}</h4>
+        </div>
+        <p class="text-slate-400 text-sm mb-3 pl-11">${l.penjelasan}</p>
+        <div class="pl-11">
+          <div class="code-block">
+            <pre><code class="language-javascript">${l.kode}</code></pre>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    return `
+      <div class="space-y-4">
+        <!-- Studi Kasus -->
+        <div class="glass-card rounded-2xl p-6 md:p-8">
+          <h3 class="text-xl font-bold text-white mb-2">${topic.studiKasus.judul}</h3>
+          <p class="text-slate-400 mb-6">${topic.studiKasus.deskripsi}</p>
+          ${langkahHtml}
+        </div>
+        
+        <!-- Coding Challenge -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 border border-amber-500/20">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="text-2xl">🎯</span>
+            <div>
+              <h3 class="text-lg font-bold text-white">${latihan.judul}</h3>
+              <p class="text-slate-400 text-sm">${latihan.deskripsi}</p>
+            </div>
+          </div>
+          
+          <!-- Expected Output -->
+          <div class="bg-slate-800/50 rounded-xl p-4 mb-4">
+            <p class="text-xs font-semibold text-sky-400 uppercase tracking-wider mb-2">📤 Output yang Diharapkan:</p>
+            <pre class="text-emerald-400 font-mono text-sm">${latihan.expectedOutput.map(line => '> ' + line).join('\n')}</pre>
+          </div>
+          
+          <!-- Hint -->
+          <details class="mb-4">
+            <summary class="text-sm text-amber-400 cursor-pointer hover:text-amber-300 transition-colors">💡 Lihat Petunjuk (Hint)</summary>
+            <p class="text-slate-400 text-sm mt-2 pl-4 border-l-2 border-amber-500/30">${latihan.hint}</p>
+          </details>
+          
+          <!-- Code Editor -->
+          <textarea id="codeEditor" rows="8" 
+            class="w-full bg-[#1e1e2e] border border-slate-700 rounded-xl p-4 text-slate-200 font-mono text-sm focus:outline-none focus:border-sky-500 resize-y"
+            placeholder="// Tulis kode JavaScript kamu di sini..."
+          >${latihan.starterCode}</textarea>
+          
+          <div class="flex gap-3 mt-4">
+            <button id="btnRunCode" class="btn-primary py-2.5 px-6 rounded-xl font-semibold text-white text-sm">
+              ▶️ Jalankan & Nilai
+            </button>
+            <button id="btnClearCode" class="bg-slate-700 hover:bg-slate-600 py-2.5 px-6 rounded-xl font-semibold text-white text-sm transition-all">
+              🗑️ Hapus
+            </button>
+            <button id="btnResetCode" class="bg-slate-700 hover:bg-slate-600 py-2.5 px-6 rounded-xl font-semibold text-white text-sm transition-all">
+              🔄 Reset
+            </button>
+          </div>
+          
+          <!-- Output Area -->
+          <div id="codeOutput" class="mt-4 hidden">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-medium text-slate-300">📤 Output Kamu:</p>
+              <button id="btnClearOutput" class="text-xs text-slate-500 hover:text-slate-300">Clear</button>
+            </div>
+            <pre id="codeOutputContent" class="bg-[#0d0d1a] border border-slate-700 rounded-xl p-4 text-emerald-400 font-mono text-sm min-h-[60px] whitespace-pre-wrap"></pre>
+          </div>
+          
+          <!-- Check Result -->
+          <div id="codeCheckResult" class="mt-4 hidden"></div>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (tab === 'latihan') {
+    return renderQuizContent();
+  }
+}
+
+function renderQuizContent() {
+  const idx = appState.currentQuestionIndex;
+  const q = appState.currentQuestions[idx];
+  const ans = appState.currentAnswers[idx];
+  const totalAnswered = appState.currentAnswers.filter(a => a !== null).length;
+  const allAnswered = totalAnswered === 3;
+  const allCorrect = allAnswered && appState.currentAnswers.every(a => a.correct);
+  
+  if (allAnswered) {
+    const correctCount = appState.currentAnswers.filter(a => a.correct).length;
+    const isPass = correctCount === 3;
+    const attempt = appState.currentAttempt;
+    const points = Math.max(0, getAttemptBasePoints(attempt) - (3 - correctCount) * 20);
+    const topicProgress = appState.progress[appState.currentTopic] || {};
+    const attemptHistory = Array.isArray(topicProgress.attemptHistory) ? topicProgress.attemptHistory : [];
+    const totalWrongThisAttempt = 3 - correctCount;
+    
+    return `
+      <div class="glass-card rounded-2xl p-6 md:p-8 text-center fade-in">
+        <div class="text-6xl mb-4">${isPass ? '🎉' : '😅'}</div>
+        <h3 class="text-2xl font-bold text-white mb-2">${isPass ? 'Mantap! Semua Benar!' : 'Ada yang Salah Nih'}</h3>
+        <p class="text-slate-400 mb-4">Kamu menjawab ${correctCount} dari 3 soal dengan benar.</p>
+        
+        <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
+          <p class="text-amber-400 text-sm font-medium">🏆 Percobaan ke-${attempt} — Nilai percobaan ini: <span class="text-2xl font-bold">${points}</span> / 100</p>
+          <p class="text-slate-300 text-sm mt-1">Benar: ${correctCount} soal · Salah: ${totalWrongThisAttempt} soal · Total percobaan: ${attemptHistory.length || attempt}</p>
+          <p class="text-slate-400 text-xs mt-1">Nilai awal turun 25 poin setiap percobaan ulang, dan setiap jawaban salah mengurangi 20 poin.</p>
+        </div>
+        
+        <div class="space-y-3 mb-6 text-left">
+          ${appState.currentAnswers.map((a, i) => `
+            <div class="flex items-center gap-3 p-3 rounded-xl ${a.correct ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}">
+              <span class="text-2xl">${a.correct ? '✅' : '❌'}</span>
+              <div>
+                <p class="text-sm font-medium ${a.correct ? 'text-emerald-400' : 'text-rose-400'}">Soal ${i + 1}</p>
+                <p class="text-slate-400 text-xs">${a.correct ? 'Jawaban benar!' : 'Jawaban salah. ' + a.penjelasan}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        ${isPass ? `
+          <button id="btnComplete" class="btn-success py-4 px-8 rounded-xl font-bold text-white text-lg">
+            🚀 Lanjut ke Topik Berikutnya
+          </button>
+        ` : `
+          <div class="bg-slate-800/50 rounded-xl p-4 mb-4">
+            <p class="text-slate-400 text-sm">💡 Jika mencoba lagi, soal diacak ulang. Nilai dasar percobaan berikutnya: ${getAttemptBasePoints(attempt + 1)} poin, lalu setiap jawaban salah mengurangi 20 poin.</p>
+          </div>
+          <button id="btnRetry" class="btn-primary py-4 px-8 rounded-xl font-bold text-white text-lg">
+            🔄 Coba Lagi (Soal Diacak)
+          </button>
+        `}
+      </div>
+    `;
+  }
+  
+  const labels = ['A', 'B', 'C', 'D'];
+  const isAnswered = ans !== null;
+  const attempt = appState.currentAttempt;
+  const maxPoints = attempt === 1 ? 100 : attempt === 2 ? 50 : attempt === 3 ? 25 : 10;
+  
+  return `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          ${[0, 1, 2].map(i => `
+            <div class="w-8 h-2 rounded-full ${i < idx ? 'bg-emerald-500' : i === idx ? 'bg-sky-500' : 'bg-slate-700'}"></div>
+          `).join('')}
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400">Percobaan ke-${attempt}</span>
+          <span class="text-xs text-amber-400 font-bold ml-2">🏆 ${maxPoints} poin</span>
+        </div>
+      </div>
+      <p class="text-slate-400 text-sm mb-4">Soal ${idx + 1} dari 3</p>
+      
+      <div class="glass-card rounded-2xl p-6 md:p-8 mb-4">
+        <div class="mb-2">
+          <span class="inline-block px-3 py-1 rounded-lg text-xs font-semibold ${q.tipe === 'pg' ? 'bg-purple-500/20 text-purple-400' : q.tipe === 'output' ? 'bg-orange-500/20 text-orange-400' : 'bg-sky-500/20 text-sky-400'}">
+            ${q.tipe === 'pg' ? 'Pilihan Ganda' : q.tipe === 'output' ? 'Tentukan Output' : 'Lengkapi Kode'}
+          </span>
+        </div>
+        <div class="text-lg text-white mb-6 leading-relaxed">${q.pertanyaan}</div>
+        
+        <div class="space-y-3">
+          ${q.opsi.map((opt, i) => {
+            let btnClass = 'option-btn w-full text-left p-4 rounded-xl border transition-all ';
+            if (!isAnswered) {
+              btnClass += 'bg-slate-800/50 border-slate-600 hover:border-sky-500 hover:bg-sky-500/10 text-slate-300';
+            } else if (i === q.jawaban) {
+              btnClass += 'bg-emerald-500/20 border-emerald-500 text-emerald-400';
+            } else if (i === ans.selected && !ans.correct) {
+              btnClass += 'bg-rose-500/20 border-rose-500 text-rose-400';
+            } else {
+              btnClass += 'bg-slate-800/30 border-slate-700 text-slate-500';
+            }
+            return `
+              <button class="${btnClass} ${isAnswered ? 'disabled cursor-default' : 'cursor-pointer'}" data-opt="${i}" ${isAnswered ? 'disabled' : ''}>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 text-sm font-bold mr-3 ${isAnswered && i === q.jawaban ? 'bg-emerald-500 text-white' : isAnswered && i === ans?.selected && !ans?.correct ? 'bg-rose-500 text-white' : ''}">${labels[i]}</span>
+                <span class="font-mono text-sm">${opt}</span>
+                ${isAnswered && i === q.jawaban ? '<span class="ml-auto text-emerald-400">✓ Benar</span>' : ''}
+                ${isAnswered && i === ans?.selected && !ans?.correct ? '<span class="ml-auto text-rose-400">✗ Salah</span>' : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
+        
+        ${isAnswered ? `
+          <div class="mt-5 p-4 rounded-xl ${ans.correct ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'}">
+            <p class="text-sm font-medium ${ans.correct ? 'text-emerald-400' : 'text-rose-400'} mb-1">${ans.correct ? '✅ Benar!' : '❌ Salah!'}</p>
+            <p class="text-slate-400 text-sm">${q.penjelasan}</p>
+          </div>
+          <button id="btnNext" class="w-full mt-4 btn-primary py-3 rounded-xl font-semibold text-white">
+            ${idx < 2 ? 'Soal Berikutnya →' : 'Lihat Hasil'}
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function attachTopicEvents() {
+  const btnBack = document.getElementById('btnBack');
+  if (btnBack) {
+    btnBack.onclick = () => {
+      appState.page = 'dashboard';
+      saveState();
+      renderApp();
+    };
+  }
+  
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      appState.activeTab = tab;
+      saveState();
+      document.getElementById('tabContent').innerHTML = renderTabContent(tab);
+      if (tab === 'studi') {
+        setTimeout(() => hljs.highlightAll(), 10);
+        attachCodeEditorEvents();
+      }
+      if (tab === 'latihan') {
+        attachQuizEvents();
+      }
+    };
+  });
+  
+  const activeTab = document.querySelector('.tab-btn.active');
+  if (activeTab) {
+    if (activeTab.dataset.tab === 'latihan') {
+      attachQuizEvents();
+    } else if (activeTab.dataset.tab === 'studi') {
+      attachCodeEditorEvents();
+    }
+  }
+}
+
+function attachCodeEditorEvents() {
+  const btnRun = document.getElementById('btnRunCode');
+  const btnClear = document.getElementById('btnClearCode');
+  const btnReset = document.getElementById('btnResetCode');
+  const btnClearOut = document.getElementById('btnClearOutput');
+  const editor = document.getElementById('codeEditor');
+  const outputDiv = document.getElementById('codeOutput');
+  const outputContent = document.getElementById('codeOutputContent');
+  const checkResult = document.getElementById('codeCheckResult');
+  
+  if (!btnRun || !editor) return;
+  editor.value = Object.prototype.hasOwnProperty.call(appState.draftCode, appState.currentTopic)
+    ? appState.draftCode[appState.currentTopic]
+    : editor.value;
+  editor.addEventListener('input', () => {
+    appState.draftCode[appState.currentTopic] = editor.value;
+    saveState();
+  });
+  
+  btnRun.onclick = () => {
+    const code = editor.value.trim();
+    if (!code) {
+      showToast('⚠️ Tulis kode dulu ya!', 'warning');
+      return;
+    }
+
+    // Proteksi infinite loop sederhana
+    if (/while\s*\(\s*true\s*\)/.test(code) || /for\s*\(\s*;\s*;\s*\)/.test(code)) {
+      showToast('⚠️ Terdeteksi potensi infinite loop. Periksa kodemu!', 'warning');
+      if (checkResult) {
+        checkResult.classList.remove('hidden');
+        checkResult.innerHTML = `
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+            <p class="text-amber-400 font-bold mb-1">⚠️ Infinite loop terdeteksi</p>
+            <p class="text-slate-400 text-sm">Kode kamu mengandung <code>while(true)</code> atau <code>for(;;)</code>. Pastikan ada kondisi berhenti agar browser tidak hang.</p>
+          </div>
+        `;
+      }
+      return;
+    }
+    
+    let logs = [];
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    console.log = (...args) => {
+      logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+    };
+    console.error = (...args) => {
+      logs.push('[ERROR] ' + args.map(a => String(a)).join(' '));
+    };
+    console.warn = (...args) => {
+      logs.push('[WARN] ' + args.map(a => String(a)).join(' '));
+    };
+    
+    try {
+      const result = eval(code);
+      if (result !== undefined && logs.length === 0) {
+        logs.push(typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result));
+      }
+    } catch (err) {
+      logs.push('[ERROR] ' + err.message);
+    } finally {
+      console.log = originalLog;
+      console.error = originalError;
+      console.warn = originalWarn;
+    }
+    
+    outputDiv.classList.remove('hidden');
+    outputContent.textContent = logs.length > 0 ? logs.join('\n') : '(tidak ada output)';
+    
+    // === Penilaian dengan rubrik ===
+    const skor = nilaiKoding(appState.currentTopic, code, logs);
+    
+    if (checkResult) {
+      checkResult.classList.remove('hidden');
+      const colorBorder = skor.lulus ? 'border-emerald-500/30' : 'border-rose-500/30';
+      const colorBg = skor.lulus ? 'bg-emerald-500/10' : 'bg-rose-500/10';
+      const colorText = skor.lulus ? 'text-emerald-400' : 'text-rose-400';
+      const icon = skor.lulus ? '🎉' : '😅';
+      const heading = skor.lulus ? 'Selamat! Tantangan koding berhasil!' : 'Belum lulus, coba lagi ya!';
+      
+      const catatanHtml = skor.catatan.map(c => {
+        const cls = c.status === 'ok' ? 'text-emerald-400' : c.status === 'warn' ? 'text-amber-400' : 'text-rose-400';
+        const ic = c.status === 'ok' ? '✅' : c.status === 'warn' ? '⚠️' : '❌';
+        return `<li class="${cls} text-sm">${ic} ${c.pesan}</li>`;
+      }).join('');
+      
+      checkResult.innerHTML = `
+        <div class="${colorBg} border ${colorBorder} rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <p class="${colorText} font-bold">${icon} ${heading}</p>
+            <p class="text-white font-bold text-lg">${skor.total} / 100</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 my-3 text-center">
+            <div class="bg-slate-800/60 rounded-lg p-2">
+              <p class="text-xs text-slate-400">Output</p>
+              <p class="font-bold text-sky-400">${skor.output}/50</p>
+            </div>
+            <div class="bg-slate-800/60 rounded-lg p-2">
+              <p class="text-xs text-slate-400">Konsep</p>
+              <p class="font-bold text-purple-400">${skor.konsep}/30</p>
+            </div>
+            <div class="bg-slate-800/60 rounded-lg p-2">
+              <p class="text-xs text-slate-400">Anti-Hardcode</p>
+              <p class="font-bold text-amber-400">${skor.kualitas}/20</p>
+            </div>
+          </div>
+          <ul class="space-y-1 mt-2">${catatanHtml}</ul>
+        </div>
+      `;
+      
+      if (skor.lulus) {
+        showToast('🎉 Tantangan koding lulus! Skor: ' + skor.total + '/100', 'success');
+      } else {
+        showToast('❌ Skor: ' + skor.total + '/100. Perbaiki kode dan coba lagi!', 'error');
+      }
+    }
+  };
+  
+  if (btnClear) {
+    btnClear.onclick = () => {
+      editor.value = '';
+      appState.draftCode[appState.currentTopic] = '';
+      saveState();
+      if (outputDiv) outputDiv.classList.add('hidden');
+      if (checkResult) checkResult.classList.add('hidden');
+    };
+  }
+  
+  if (btnReset) {
+    btnReset.onclick = () => {
+      const topic = materiTopik[appState.currentTopic];
+      editor.value = topic.latihanKoding.starterCode;
+      appState.draftCode[appState.currentTopic] = editor.value;
+      saveState();
+      if (outputDiv) outputDiv.classList.add('hidden');
+      if (checkResult) checkResult.classList.add('hidden');
+      showToast('🔄 Kode direset ke awal!', 'info');
+    };
+  }
+  
+  if (btnClearOut) {
+    btnClearOut.onclick = () => {
+      if (outputContent) outputContent.textContent = '';
+      if (outputDiv) outputDiv.classList.add('hidden');
+      if (checkResult) checkResult.classList.add('hidden');
+    };
+  }
+}
+
+function attachQuizEvents() {
+  document.querySelectorAll('.option-btn[data-opt]').forEach(btn => {
+    btn.onclick = () => {
+      const optIdx = parseInt(btn.dataset.opt);
+      const q = appState.currentQuestions[appState.currentQuestionIndex];
+      const correct = optIdx === q.jawaban;
+      appState.currentAnswers[appState.currentQuestionIndex] = {
+        selected: optIdx,
+        correct: correct,
+        penjelasan: q.penjelasan
+      };
+      recordAttemptIfComplete();
+      
+      document.getElementById('tabContent').innerHTML = renderQuizContent();
+      attachQuizEvents();
+      
+      if (correct) {
+        showToast('✅ Benar! ' + q.penjelasan.substring(0, 50) + '...', 'success');
+      } else {
+        showToast('❌ Salah. ' + q.penjelasan.substring(0, 50) + '...', 'error');
+      }
+    };
+  });
+  
+  const btnNext = document.getElementById('btnNext');
+  if (btnNext) {
+    btnNext.onclick = () => {
+      if (appState.currentQuestionIndex < 2) {
+        appState.currentQuestionIndex++;
+        saveState();
+        document.getElementById('tabContent').innerHTML = renderQuizContent();
+        attachQuizEvents();
+      } else {
+        document.getElementById('tabContent').innerHTML = renderQuizContent();
+        attachQuizEvents();
+      }
+    };
+  }
+  
+  const btnComplete = document.getElementById('btnComplete');
+  if (btnComplete) {
+    btnComplete.onclick = () => {
+      const allThreeCorrect = Array.isArray(appState.currentAnswers) &&
+        appState.currentAnswers.length === 3 &&
+        appState.currentAnswers.every(answer => answer !== null && answer.correct === true);
+      if (!allThreeCorrect) {
+        showToast('🔒 Kamu harus menjawab semua soal dengan benar untuk melanjutkan.', 'warning');
+        return;
+      }
+      const attempt = appState.currentAttempt;
+      const existing = appState.progress[appState.currentTopic] || {};
+      const latest = Array.isArray(existing.attemptHistory) ? existing.attemptHistory.find(item => item.attempt === attempt) : null;
+      const score = latest ? latest.score : Math.max(0, getAttemptBasePoints(attempt));
+      appState.progress[appState.currentTopic] = {
+        ...existing,
+        completed: true,
+        correct: 3,
+        wrong: 0,
+        total: 3,
+        attempts: attempt,
+        score: score,
+        attemptHistory: Array.isArray(existing.attemptHistory) ? existing.attemptHistory : []
+      };
+      saveState();
+      
+      if (appState.currentTopic < 9) {
+        showToast('🎉 Topik ' + appState.currentTopic + ' selesai! +' + score + ' poin!', 'success');
+        appState.page = 'dashboard';
+        saveState();
+        renderApp();
+      } else {
+        showToast('🏆 Semua topik selesai! Lihat hasilmu.', 'success');
+        appState.page = 'result';
+        saveState();
+        renderApp();
+      }
+    };
+  }
+  
+  const btnRetry = document.getElementById('btnRetry');
+  if (btnRetry) {
+    btnRetry.onclick = () => {
+      appState.currentAttempt += 1;
+      const existing = appState.progress[appState.currentTopic] || { completed: false, attemptHistory: [] };
+      appState.progress[appState.currentTopic] = { ...existing, attempts: appState.currentAttempt };
+      appState.currentQuestions = getRandomQuestions(appState.currentTopic);
+      appState.currentAnswers = new Array(3).fill(null);
+      appState.currentQuestionIndex = 0;
+      saveState();
+      document.getElementById('tabContent').innerHTML = renderQuizContent();
+      attachQuizEvents();
+      showToast('🔄 Soal diacak ulang. Semangat!', 'info');
+    };
+  }
+}
+
+function renderResult() {
+  const completed = getCompletedCount();
+  const totalCorrect = Object.values(appState.progress).reduce((sum, p) => sum + (p.correct || 0), 0);
+  const MAX_SOAL = 27;
+  const persen = Math.round((totalCorrect / MAX_SOAL) * 100);
+  const predikat = getPredikat(persen);
+  const totalScore = Object.values(appState.progress).reduce((sum, p) => sum + (p.score || 0), 0);
+  const maxPossibleScore = completed * 100;
+  const scorePercent = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
+  
+  let tableRows = '';
+  for (let i = 1; i <= 9; i++) {
+    const p = appState.progress[i];
+    const isDone = p && p.completed;
+    tableRows += `
+      <tr class="border-b border-slate-700/50">
+        <td class="py-3 px-4 text-slate-300">${i}</td>
+        <td class="py-3 px-4 text-white font-medium">${materiTopik[i].judul}</td>
+        <td class="py-3 px-4 text-center ${isDone ? 'text-emerald-400' : 'text-slate-500'}">${isDone ? (p.correct ?? 3) : '-'} </td>
+        <td class="py-3 px-4 text-center text-rose-400">${isDone ? (p.wrong ?? 0) : '-'}</td>
+        <td class="py-3 px-4 text-center text-slate-400">${p ? (p.attempts || 0) : '-'}</td>
+        <td class="py-3 px-4 text-center ${isDone ? 'text-amber-400 font-bold' : 'text-slate-500'}">${isDone ? (p.score || 0) : '-'}</td>
+        <td class="py-3 px-4 text-center">
+          <span class="px-2 py-1 rounded-lg text-xs font-semibold ${isDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
+            ${isDone ? 'LULUS' : 'BELUM'}
+          </span>
+        </td>
+      </tr>
+    `;
+  }
+  
+  return `
+    <div class="min-h-screen p-4 md:p-8">
+      <div class="max-w-3xl mx-auto">
+        <div class="glass-card rounded-2xl p-6 md:p-8 text-center mb-6 fade-in">
+          <div class="text-6xl mb-4">🏆</div>
+          <h2 class="text-3xl font-bold text-white mb-2">Selamat, ${appState.user.nama}!</h2>
+          <p class="text-slate-400 mb-6">Kamu telah menyelesaikan semua topik pembelajaran.</p>
+          
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-slate-800/50 rounded-xl p-4">
+              <p class="text-3xl font-bold text-sky-400">${completed}</p>
+              <p class="text-slate-400 text-xs">Topik Selesai</p>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4">
+              <p class="text-3xl font-bold text-emerald-400">${totalCorrect}</p>
+              <p class="text-slate-400 text-xs">Jawaban Benar</p>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4">
+              <p class="text-3xl font-bold text-amber-400">${totalScore}</p>
+              <p class="text-slate-400 text-xs">Total Poin</p>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4">
+              <p class="text-3xl font-bold text-purple-400">${persen}%</p>
+              <p class="text-slate-400 text-xs">Persentase</p>
+            </div>
+            <div class="bg-slate-800/50 rounded-xl p-4">
+              <p class="text-3xl font-bold ${predikat.lulus ? 'text-emerald-400' : 'text-rose-400'}">${predikat.huruf}</p>
+              <p class="text-slate-400 text-xs">Predikat</p>
+            </div>
+          </div>
+          
+          <div class="p-4 rounded-xl ${predikat.lulus ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20'} mb-6">
+            <p class="text-lg font-bold ${predikat.lulus ? 'text-emerald-400' : 'text-rose-400'}">
+              ${predikat.lulus ? '✅ LULUS' : '❌ BELUM LULUS'}
+            </p>
+            <p class="text-slate-400 text-sm mt-1">${predikat.lulus ? 'Keren! Kamu sudah menguasai dasar-dasar pemrograman.' : 'Jangan menyerah! Review materi dan coba lagi.'}</p>
+          </div>
+          
+          <button id="btnDownloadPDF" class="btn-primary py-4 px-8 rounded-xl font-bold text-white text-lg mb-3">
+            📄 Unduh Laporan Hasil Belajar (PDF)
+          </button>
+          <br>
+          <button id="btnBackDashboard" class="text-slate-400 hover:text-white text-sm py-2">
+            ← Kembali ke Dashboard
+          </button>
+        </div>
+        
+        <!-- Hidden PDF content -->
+        <div id="pdfContent" style="display:none;">
+          <div style="font-family: Arial, sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; color: #333;">
+            <div style="text-align: center; border-bottom: 3px solid #0ea5e9; padding-bottom: 20px; margin-bottom: 30px;">
+              <h1 style="font-size: 24px; margin: 0; color: #0f172a;">LAPORAN HASIL BELAJAR</h1>
+              <p style="font-size: 16px; color: #64748b; margin: 5px 0 0 0;">Pemrograman Dasar - JavaScript</p>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 14px; color: #0ea5e9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Data Siswa</h3>
+              <table style="width: 100%; font-size: 13px;">
+                <tr><td style="width: 150px; padding: 5px 0;"><strong>Nama Lengkap</strong></td><td>: ${appState.user.nama}</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Kelas</strong></td><td>: ${appState.user.kelas}</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Nomor Absen</strong></td><td>: ${appState.user.absen}</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Tanggal Pengerjaan</strong></td><td>: ${formatDateID()}</td></tr>
+              </table>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 14px; color: #0ea5e9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Tabel Skor Per Topik</h3>
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr style="background: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">No</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Topik</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Benar</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Salah</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Percobaan</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Poin</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.keys(materiTopik).map(i => {
+                    const p = appState.progress[i];
+                    const done = p && p.completed;
+                    return `<tr>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${i}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px;">${materiTopik[i].judul}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${done ? (p.correct ?? 3) : '0'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${done ? (p.wrong ?? 0) : '0'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${p ? (p.attempts || 0) : '0'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${done ? (p.score || 0) : '0'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${done ? 'LULUS' : 'BELUM'}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+              <h3 style="font-size: 14px; color: #0ea5e9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Rekapitulasi</h3>
+              <table style="width: 100%; font-size: 13px;">
+                <tr><td style="width: 150px; padding: 5px 0;"><strong>Total Benar</strong></td><td>: ${totalCorrect} / 27</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Total Poin</strong></td><td>: ${totalScore} / ${maxPossibleScore}</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Persentase</strong></td><td>: ${persen}%</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Predikat</strong></td><td>: ${predikat.huruf}</td></tr>
+                <tr><td style="padding: 5px 0;"><strong>Keterangan</strong></td><td>: ${predikat.lulus ? 'LULUS' : 'BELUM LULUS'}</td></tr>
+              </table>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+              <h3 style="font-size: 14px; color: #0ea5e9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Riwayat Percobaan</h3>
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead><tr style="background: #f1f5f9;"><th style="border: 1px solid #cbd5e1; padding: 6px;">Topik</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Percobaan</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Benar</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Salah</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Nilai</th></tr></thead>
+                <tbody>${Object.keys(materiTopik).flatMap(i => {
+                  const p = appState.progress[i];
+                  return (p && Array.isArray(p.attemptHistory) ? p.attemptHistory : []).map(h => `<tr><td style="border: 1px solid #cbd5e1; padding: 6px;">${materiTopik[i].judul}</td><td style="border: 1px solid #cbd5e1; padding: 6px; text-align:center;">${h.attempt}</td><td style="border: 1px solid #cbd5e1; padding: 6px; text-align:center;">${h.correct}</td><td style="border: 1px solid #cbd5e1; padding: 6px; text-align:center;">${h.wrong}</td><td style="border: 1px solid #cbd5e1; padding: 6px; text-align:center;">${h.score}</td></tr>`);
+                }).join('')}</tbody>
+              </table>
+            </div>
+            
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
+              <p>Dokumen ini dihasilkan secara otomatis oleh Media Pembelajaran Interaktif</p>
+              <p>Mata Pelajaran: Pemrograman Dasar</p>
+              <p>SMK _________________________</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Score Table (visible) -->
+        <div class="glass-card rounded-2xl p-6 overflow-x-auto">
+          <h3 class="text-lg font-bold text-white mb-4">📋 Detail Skor per Topik</h3>
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="text-left py-3 px-4 text-slate-400 font-medium">No</th>
+                <th class="text-left py-3 px-4 text-slate-400 font-medium">Topik</th>
+                <th class="text-center py-3 px-4 text-slate-400 font-medium">Benar</th>
+                <th class="text-center py-3 px-4 text-slate-400 font-medium">Salah</th>
+                <th class="text-center py-3 px-4 text-slate-400 font-medium">Percobaan</th>
+                <th class="text-center py-3 px-4 text-slate-400 font-medium">Poin</th>
+                <th class="text-center py-3 px-4 text-slate-400 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachResultEvents() {
+  document.getElementById('btnBackDashboard').onclick = () => {
+    appState.page = 'dashboard';
+    saveState();
+    renderApp();
+  };
+  
+  document.getElementById('btnDownloadPDF').onclick = async () => {
+    const pdfContent = document.getElementById('pdfContent');
+    const element = pdfContent && pdfContent.firstElementChild;
+    if (!pdfContent || !element) {
+      showToast('❌ Konten laporan PDF tidak ditemukan.', 'error');
+      return;
+    }
+    const filename = `HasilBelajar_${(appState.user?.nama || 'Siswa').replace(/[^a-z0-9_-]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const opt = {
+      margin: 10,
+      filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    const oldDisplay = pdfContent.style.display;
+    try {
+      pdfContent.style.display = 'block';
+      pdfContent.style.position = 'absolute';
+      pdfContent.style.left = '0';
+      pdfContent.style.top = '0';
+      pdfContent.style.width = '800px';
+      pdfContent.style.zIndex = '-1';
+      if (typeof window.html2pdf === 'function') {
+        await window.html2pdf().set(opt).from(element).save();
+        showToast('📄 Laporan PDF berhasil dibuat. Periksa folder Unduhan.', 'success');
+      } else {
+        throw new Error('Library html2pdf tidak tersedia');
+      }
+    } catch (err) {
+      console.error('PDF download error:', err);
+      try {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) throw new Error('Popup diblokir browser');
+        printWindow.document.open();
+        printWindow.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${filename}</title><style>body{font-family:Arial,sans-serif;color:#222;margin:20mm}table{width:100%;border-collapse:collapse}td,th{padding:7px;border:1px solid #ccc;text-align:left}h1,h2,h3{color:#0f172a} @media print{button{display:none}}</style></head><body>${element.innerHTML}<script>window.onload=function(){setTimeout(function(){window.print()},300)};<\/script></body></html>`);
+        printWindow.document.close();
+        showToast('PDF otomatis gagal. Pilih "Save as PDF" pada jendela cetak.', 'warning');
+      } catch (printErr) {
+        showToast('❌ PDF gagal. Izinkan pop-up atau coba browser Chrome/Edge.', 'error');
+        console.error('Print fallback error:', printErr);
+      }
+    } finally {
+      // Restore dengan cara yang lebih aman
+      pdfContent.style.display = oldDisplay;
+      pdfContent.style.position = '';
+      pdfContent.style.left = '';
+      pdfContent.style.top = '';
+      pdfContent.style.width = '';
+      pdfContent.style.zIndex = '';
+      if (oldDisplay === 'none' || oldDisplay === '') {
+        pdfContent.setAttribute('style', 'display:none;');
+      }
+    }
+  };
+  
+  createConfetti();
+}
+
+function createConfetti() {
+  const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 4000);
+    }, i * 50);
+  }
+}
+
+// =====================================================
+// INIT
+// =====================================================
+
+window.addEventListener('pagehide', saveState);
+loadState();
+renderApp();
+</script>
+</body>
+</html>
